@@ -193,7 +193,7 @@ const Navbar = () => {
           ml: { sm: `${desktopCollapsed ? collapsedWidth : drawerWidth}px` },
         }}
       >
-        {/* Page content will render here */}
+        {/* Page content will render here  anand */}
       </Box>
     </Box>
   );
