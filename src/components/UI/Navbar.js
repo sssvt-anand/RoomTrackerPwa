@@ -12,7 +12,8 @@ import {
   useMediaQuery,
   useTheme,
   CssBaseline,
-  Typography
+  Typography,
+  Button
 } from '@material-ui/core';
 import {
   ChevronLeft as CollapseIcon,
@@ -23,11 +24,12 @@ import {
   Assessment as ReportsIcon,
   ExitToApp as LogoutIcon,
   AccountCircle as LoginIcon,
-  HowToReg as RegisterIcon
+  HowToReg as RegisterIcon,
+  Add as AddIcon
 } from '@material-ui/icons';
 import { useAuth } from '../../context/AuthContext';
 
-const drawerWidth = 100;
+const drawerWidth = 240;
 const collapsedWidth = 72;
 
 const Navbar = () => {
@@ -75,6 +77,22 @@ const Navbar = () => {
             </Typography>
           </div>
           <Divider />
+          
+          {/* Add Expense Button (only for logged-in users) */}
+          {user && (
+            <Box p={2}>
+              <Button
+                variant="contained"
+                color="primary"
+                fullWidth
+                startIcon={<AddIcon />}
+                component={Link}
+                to="/expenses/new"
+              >
+                Add Expense
+              </Button>
+            </Box>
+          )}
           
           <List>
             {user ? (

@@ -222,62 +222,76 @@ const ExpensesPage = () => {
 
         {/* Add Expense Dialog */}
         <Dialog open={addDialogOpen} onClose={() => setAddDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Add New Expense</DialogTitle>
-        <DialogContent>
-          <Box mb={2}>
-            <FormControl fullWidth variant="outlined">
-              <InputLabel>For Member</InputLabel>
-              <Select
-                name="memberId"
-                value={newExpense.memberId}
-                onChange={(e) => setNewExpense({...newExpense, memberId: e.target.value})}
-                label="For Member"
-              >
-                {members.map(member => (
-                  <MenuItem key={member.id} value={member.id}>
-                    {member.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Box>
-          <Box mb={2}>
-            <TextField
-              fullWidth
-              label="Description"
-              value={newExpense.description}
-              onChange={(e) => setNewExpense({...newExpense, description: e.target.value})}
-              variant="outlined"
-              required
-            />
-          </Box>
-          <Box mb={2}>
-            <TextField
-              fullWidth
-              label="Amount (₹)"
-              type="number"
-              value={newExpense.amount}
-              onChange={(e) => setNewExpense({...newExpense, amount: e.target.value})}
-              variant="outlined"
-              inputProps={{ step: "0.01", min: "0.01" }}
-              required
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setAddDialogOpen(false)} color="primary">
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleAddExpense} 
-            color="primary" 
-            variant="contained"
-            disabled={isAdding || !newExpense.description || !newExpense.amount || !newExpense.memberId}
-          >
-            {isAdding ? <CircularProgress size={24} /> : 'Add Expense'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+          <DialogTitle>Add New Expense</DialogTitle>
+          <DialogContent>
+            <Box mb={2}>
+              <FormControl fullWidth variant="outlined">
+                <InputLabel>For Member</InputLabel>
+                <Select
+                  name="memberId"
+                  value={newExpense.memberId}
+                  onChange={(e) => setNewExpense({...newExpense, memberId: e.target.value})}
+                  label="For Member"
+                >
+                  {members.map(member => (
+                    <MenuItem key={member.id} value={member.id}>
+                      {member.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+            <Box mb={2}>
+              <TextField
+                fullWidth
+                label="Description"
+                value={newExpense.description}
+                onChange={(e) => setNewExpense({...newExpense, description: e.target.value})}
+                variant="outlined"
+                required
+              />
+            </Box>
+            <Box mb={2}>
+              <TextField
+                fullWidth
+                label="Amount (₹)"
+                type="number"
+                value={newExpense.amount}
+                onChange={(e) => setNewExpense({...newExpense, amount: e.target.value})}
+                variant="outlined"
+                inputProps={{ step: "0.01", min: "0.01" }}
+                required
+              />
+            </Box>
+            <Box mb={2}>
+              <DatePicker
+                label="Expense Date"
+                value={newExpense.date}
+                onChange={(date) => setNewExpense({...newExpense, date})}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    variant: 'outlined',
+                    required: true
+                  }
+                }}
+              />
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setAddDialogOpen(false)} color="primary">
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleAddExpense} 
+              color="primary" 
+              variant="contained"
+              disabled={isAdding || !newExpense.description || !newExpense.amount || !newExpense.memberId}
+            >
+              {isAdding ? <CircularProgress size={24} /> : 'Add Expense'}
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         {/* Edit Expense Dialog */}
         {currentExpense && (
