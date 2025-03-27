@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { 
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import {
   Box,
   Drawer,
   List,
@@ -14,8 +14,9 @@ import {
   CssBaseline,
   Typography,
   Button
-} from '@material-ui/core';
+} from '@mui/material';
 import {
+  Menu as MenuIcon,
   ChevronLeft as CollapseIcon,
   ChevronRight as ExpandIcon,
   Dashboard as DashboardIcon,
@@ -26,7 +27,7 @@ import {
   AccountCircle as LoginIcon,
   HowToReg as RegisterIcon,
   Add as AddIcon
-} from '@material-ui/icons';
+} from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 
 const drawerWidth = 240;
@@ -35,55 +36,56 @@ const collapsedWidth = 72;
 const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [mobileOpen, setMobileOpen] = useState(false);
   const [desktopCollapsed, setDesktopCollapsed] = useState(false);
 
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
-  };
-
-  const handleDesktopToggle = () => {
-    setDesktopCollapsed(!desktopCollapsed);
-  };
+  const handleDrawerToggle = () => setMobileOpen(!mobileOpen);
+  const handleDesktopToggle = () => setDesktopCollapsed(!desktopCollapsed);
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
+  const getMenuItemStyle = (path) => ({
+    backgroundColor: location.pathname === path ? '#2563eb' : 'transparent',
+    color: location.pathname === path ? '#ffffff' : '#cbd5e1',
+    borderRadius: '8px',
+    '&:hover': {
+      backgroundColor: '#1e293b',
+    },
+  });
+
   const drawerContent = (collapsed = false) => (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#0d1b2a', color: '#ffffff' }}>
       {/* Collapse/Expand Button */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'flex-end',
-        padding: '8px',
-        height: '64px'
-      }}>
-        <IconButton onClick={isMobile ? handleDrawerToggle : handleDesktopToggle}>
-          {collapsed ? <ExpandIcon /> : <CollapseIcon />}
-        </IconButton>
-      </div>
+      {!isMobile && (
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '8px', height: '64px' }}>
+          <IconButton sx={{ color: '#ffffff' }} onClick={handleDesktopToggle}>
+            {collapsed ? <ExpandIcon /> : <CollapseIcon />}
+          </IconButton>
+        </Box>
+      )}
       
-      <Divider />
+      <Divider sx={{ backgroundColor: '#374151' }} />
       
       {!collapsed && (
         <>
-          <div style={{ padding: '16px' }}>
+          <Box sx={{ padding: '16px' }}>
             <Typography variant="h6" noWrap>
               Room Expenses
             </Typography>
-          </div>
-          <Divider />
+          </Box>
+          <Divider sx={{ backgroundColor: '#374151' }} />
           
-          {/* Add Expense Button (only for logged-in users) */}
           {user && (
             <Box p={2}>
               <Button
                 variant="contained"
-                color="primary"
+                sx={{ backgroundColor: '#2563eb', color: '#ffffff', '&:hover': { backgroundColor: '#1e40af' } }}
                 fullWidth
                 startIcon={<AddIcon />}
                 component={Link}
@@ -93,87 +95,84 @@ const Navbar = () => {
               </Button>
             </Box>
           )}
-          
-          <List>
-            {user ? (
-              <>
-                <ListItem button component={Link} to="/">
-                  <ListItemIcon><DashboardIcon /></ListItemIcon>
-                  <ListItemText primary="Dashboard" />
-                </ListItem>
-                <ListItem button component={Link} to="/expenses">
-                  <ListItemIcon><ExpensesIcon /></ListItemIcon>
-                  <ListItemText primary="Expenses" />
-                </ListItem>
-                <ListItem button component={Link} to="/members">
-                  <ListItemIcon><MembersIcon /></ListItemIcon>
-                  <ListItemText primary="Members" />
-                </ListItem>
-                <ListItem button component={Link} to="/reports">
-                  <ListItemIcon><ReportsIcon /></ListItemIcon>
-                  <ListItemText primary="Reports" />
-                </ListItem>
-                <Divider />
-                <ListItem button onClick={handleLogout}>
-                  <ListItemIcon><LogoutIcon /></ListItemIcon>
-                  <ListItemText primary="Logout" />
-                </ListItem>
-              </>
-            ) : (
-              <>
-                <ListItem button component={Link} to="/login">
-                  <ListItemIcon><LoginIcon /></ListItemIcon>
-                  <ListItemText primary="Login" />
-                </ListItem>
-                <ListItem button component={Link} to="/register">
-                  <ListItemIcon><RegisterIcon /></ListItemIcon>
-                  <ListItemText primary="Register" />
-                </ListItem>
-              </>
-            )}
-          </List>
         </>
       )}
-    </div>
+      
+      <List>
+        {user ? (
+          <>
+            <ListItem button component={Link} to="/" sx={getMenuItemStyle('/')}>
+              <ListItemIcon sx={{ color: 'inherit' }}><DashboardIcon /></ListItemIcon>
+              {!collapsed && <ListItemText primary="Dashboard" />}
+            </ListItem>
+            <ListItem button component={Link} to="/expenses" sx={getMenuItemStyle('/expenses')}>
+              <ListItemIcon sx={{ color: 'inherit' }}><ExpensesIcon /></ListItemIcon>
+              {!collapsed && <ListItemText primary="Expenses" />}
+            </ListItem>
+            <ListItem button component={Link} to="/members" sx={getMenuItemStyle('/members')}>
+              <ListItemIcon sx={{ color: 'inherit' }}><MembersIcon /></ListItemIcon>
+              {!collapsed && <ListItemText primary="Members" />}
+            </ListItem>
+            <ListItem button component={Link} to="/reports" sx={getMenuItemStyle('/reports')}>
+              <ListItemIcon sx={{ color: 'inherit' }}><ReportsIcon /></ListItemIcon>
+              {!collapsed && <ListItemText primary="Reports" />}
+            </ListItem>
+            <Divider sx={{ backgroundColor: '#374151' }} />
+            <ListItem button onClick={handleLogout} sx={getMenuItemStyle('/logout')}>
+              <ListItemIcon sx={{ color: 'inherit' }}><LogoutIcon /></ListItemIcon>
+              {!collapsed && <ListItemText primary="Logout" />}
+            </ListItem>
+          </>
+        ) : (
+          <>
+            <ListItem button component={Link} to="/login" sx={getMenuItemStyle('/login')}>
+              <ListItemIcon sx={{ color: 'inherit' }}><LoginIcon /></ListItemIcon>
+              {!collapsed && <ListItemText primary="Login" />}
+            </ListItem>
+            <ListItem button component={Link} to="/register" sx={getMenuItemStyle('/register')}>
+              <ListItemIcon sx={{ color: 'inherit' }}><RegisterIcon /></ListItemIcon>
+              {!collapsed && <ListItemText primary="Register" />}
+            </ListItem>
+          </>
+        )}
+      </List>
+    </Box>
   );
 
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
-      <Box
-        component="nav"
-        sx={{ 
-          width: { sm: desktopCollapsed ? collapsedWidth : drawerWidth },
-          flexShrink: { sm: 0 },
-        }}
-      >
-        {/* Mobile drawer */}
+      {/* Mobile menu button */}
+      {isMobile && (
+        <IconButton sx={{ position: 'absolute', top: 16, left: 16, color: '#ffffff', zIndex: 1301 }} onClick={handleDrawerToggle}>
+          <MenuIcon />
+        </IconButton>
+      )}
+      <Box component="nav" sx={{ width: { sm: desktopCollapsed ? collapsedWidth : drawerWidth }, flexShrink: { sm: 0 } }}>
+        {/* Mobile Drawer */}
         <Drawer
           variant="temporary"
           open={mobileOpen}
           onClose={handleDrawerToggle}
-          ModalProps={{
-            keepMounted: true,
-          }}
+          ModalProps={{ keepMounted: true }}
           sx={{
             display: { xs: 'block', sm: 'none' },
-            '& .MuiDrawer-paper': { 
-              boxSizing: 'border-box', 
-              width: drawerWidth,
-            },
+            '& .MuiDrawer-paper': { width: drawerWidth, backgroundColor: '#0d1b2a', color: '#ffffff' },
           }}
         >
-          {drawerContent()}
+          {drawerContent(false)}
         </Drawer>
-        {/* Desktop drawer */}
+
+        {/* Desktop Drawer */}
         <Drawer
           variant="permanent"
           sx={{
             display: { xs: 'none', sm: 'block' },
             '& .MuiDrawer-paper': { 
-              boxSizing: 'border-box', 
               width: desktopCollapsed ? collapsedWidth : drawerWidth,
               overflowX: 'hidden',
+              backgroundColor: '#0d1b2a',
+              color: '#ffffff',
               transition: theme.transitions.create('width', {
                 easing: theme.transitions.easing.sharp,
                 duration: theme.transitions.duration.enteringScreen,
