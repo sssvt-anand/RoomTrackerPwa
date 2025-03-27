@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
-  Container,
   Card,
   Typography,
   Box,
@@ -9,13 +8,17 @@ import {
   Button,
   Divider,
   InputAdornment,
-  IconButton
+  IconButton,
+  CircularProgress,
+  Snackbar
 } from '@material-ui/core';
 import { 
   Email as EmailIcon,
   Lock as LockIcon,
   Visibility,
-  VisibilityOff
+  VisibilityOff,
+  Error as ErrorIcon,
+  Close as CloseIcon
 } from '@material-ui/icons';
 import { useAuth } from '../context/AuthContext';
 import { makeStyles } from '@material-ui/core/styles';
@@ -34,7 +37,6 @@ const useStyles = makeStyles((theme) => ({
     maxWidth: 400,
     borderRadius: 15,
     boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-    border: 'none',
     padding: theme.spacing(4),
   },
   header: {
@@ -48,12 +50,6 @@ const useStyles = makeStyles((theme) => ({
   },
   subtitle: {
     color: '#7f8c8d',
-    margin: 0,
-  },
-  error: {
-    color: theme.palette.error.main,
-    textAlign: 'center',
-    marginBottom: theme.spacing(3),
   },
   form: {
     width: '100%',
@@ -70,10 +66,12 @@ const useStyles = makeStyles((theme) => ({
     fontWeight: 600,
     padding: theme.spacing(1.5),
     marginTop: theme.spacing(2),
-    marginBottom: theme.spacing(2),
     '&:hover': {
       boxShadow: theme.shadows[3],
     },
+    '&:disabled': {
+      background: theme.palette.grey[300],
+    }
   },
   footer: {
     textAlign: 'center',
@@ -88,35 +86,72 @@ const useStyles = makeStyles((theme) => ({
       textDecoration: 'underline',
     },
   },
+  buttonProgress: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    marginTop: -12,
+    marginLeft: -12,
+  },
+  errorSnackbar: {
+    backgroundColor: theme.palette.error.dark,
+    color: theme.palette.common.white,
+    borderRadius: 4,
+    padding: '6px 16px',
+    display: 'flex',
+    alignItems: 'center',
+  },
 }));
 
 const LoginPage = () => {
   const classes = useStyles();
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setLoading(true);
+    setError('');
+    
     const formData = new FormData(event.target);
     const credentials = {
-      username: formData.get('username'),
+      username: formData.get('username').trim(),
       password: formData.get('password'),
     };
 
+    // Client-side validation
+    if (!credentials.username || !credentials.password) {
+      setError('Please fill in all fields');
+      setLoading(false);
+      return;
+    }
+
     try {
-      await login(credentials.username, credentials.password);
+      const success = await login(credentials.username, credentials.password);
+      if (!success) {
+        throw new Error('Invalid credentials');
+      }
       navigate('/dashboard');
     } catch (err) {
-      setError('Login failed. Please check your credentials.');
       console.error('Login Error:', err);
+      setError(err.response?.data?.message || 'Invalid username or password');
+      setSnackbarOpen(true);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbarOpen(false);
   };
 
   return (
     <div className={classes.container}>
-      <Card className={classes.card}>
+      <Card className={classes.card} elevation={3}>
         <div className={classes.header}>
           <Typography variant="h4" className={classes.title}>
             Welcome Back
@@ -126,13 +161,7 @@ const LoginPage = () => {
           </Typography>
         </div>
 
-        {error && (
-          <Typography variant="body2" className={classes.error}>
-            {error}
-          </Typography>
-        )}
-
-        <form className={classes.form} onSubmit={handleSubmit}>
+        <form className={classes.form} onSubmit={handleSubmit} noValidate>
           <TextField
             name="username"
             label="Username"
@@ -140,13 +169,13 @@ const LoginPage = () => {
             fullWidth
             required
             className={classes.input}
+            disabled={loading}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
                   <EmailIcon style={{ color: '#7f8c8d' }} />
                 </InputAdornment>
               ),
-              style: { borderRadius: 8 },
             }}
           />
 
@@ -158,6 +187,7 @@ const LoginPage = () => {
             fullWidth
             required
             className={classes.input}
+            disabled={loading}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -170,24 +200,30 @@ const LoginPage = () => {
                     aria-label="toggle password visibility"
                     onClick={() => setShowPassword(!showPassword)}
                     edge="end"
+                    disabled={loading}
                   >
                     {showPassword ? <VisibilityOff /> : <Visibility />}
                   </IconButton>
                 </InputAdornment>
               ),
-              style: { borderRadius: 8 },
             }}
           />
 
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            size="large"
-            className={classes.button}
-          >
-            Log in
-          </Button>
+          <Box position="relative">
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              size="large"
+              className={classes.button}
+              disabled={loading}
+            >
+              Log in
+            </Button>
+            {loading && (
+              <CircularProgress size={24} className={classes.buttonProgress} />
+            )}
+          </Box>
         </form>
 
         <Divider style={{ margin: '16px 0' }} />
@@ -201,6 +237,27 @@ const LoginPage = () => {
           </Typography>
         </div>
       </Card>
+
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <div className={classes.errorSnackbar}>
+          <ErrorIcon style={{ marginRight: 8 }} />
+          <Typography variant="body2">{error}</Typography>
+          <IconButton 
+            size="small" 
+            aria-label="close" 
+            color="inherit" 
+            onClick={handleCloseSnackbar}
+            style={{ marginLeft: 8, padding: 4 }}
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </div>
+      </Snackbar>
     </div>
   );
 };
