@@ -135,7 +135,7 @@ const LoginPage = () => {
       if (!success) {
         throw new Error('Invalid credentials');
       }
-      navigate('/');  // Changed from '/dashboard' to '/'
+      navigate('/');  
     } catch (err) {
       console.error('Login Error:', err);
       setError(err.response?.data?.message || 'Invalid username or password');
