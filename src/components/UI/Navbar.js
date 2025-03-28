@@ -11,8 +11,7 @@ import {
   IconButton,
   useMediaQuery,
   useTheme,
-  CssBaseline,
-  Typography
+  CssBaseline  
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -55,10 +54,18 @@ const Navbar = () => {
     '&:hover': {
       backgroundColor: '#1e293b',
     },
+    margin: '4px 8px',
   });
 
   const drawerContent = (collapsed = false) => (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#0d1b2a', color: '#ffffff' }}>
+    <Box sx={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      height: '100%', 
+      backgroundColor: '#0d1b2a', 
+      color: '#ffffff',
+      pt: { xs: '64px', sm: 0 } // Added padding top for mobile
+    }}>
       {/* Collapse/Expand Button */}
       {!isMobile && (
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '8px', height: '64px' }}>
@@ -70,39 +77,53 @@ const Navbar = () => {
       
       <Divider sx={{ backgroundColor: '#374151' }} />
       
-      <List>
+      <List sx={{ px: collapsed ? 1 : 2 }}>
         {user ? (
           <>
             <ListItem button component={Link} to="/" sx={getMenuItemStyle('/')}>
-              <ListItemIcon sx={{ color: 'inherit' }}><DashboardIcon /></ListItemIcon>
+              <ListItemIcon sx={{ color: 'inherit', minWidth: collapsed ? '40px' : '56px' }}>
+                <DashboardIcon />
+              </ListItemIcon>
               {!collapsed && <ListItemText primary="Dashboard" />}
             </ListItem>
             <ListItem button component={Link} to="/expenses" sx={getMenuItemStyle('/expenses')}>
-              <ListItemIcon sx={{ color: 'inherit' }}><ExpensesIcon /></ListItemIcon>
+              <ListItemIcon sx={{ color: 'inherit', minWidth: collapsed ? '40px' : '56px' }}>
+                <ExpensesIcon />
+              </ListItemIcon>
               {!collapsed && <ListItemText primary="Expenses" />}
             </ListItem>
             <ListItem button component={Link} to="/members" sx={getMenuItemStyle('/members')}>
-              <ListItemIcon sx={{ color: 'inherit' }}><MembersIcon /></ListItemIcon>
+              <ListItemIcon sx={{ color: 'inherit', minWidth: collapsed ? '40px' : '56px' }}>
+                <MembersIcon />
+              </ListItemIcon>
               {!collapsed && <ListItemText primary="Members" />}
             </ListItem>
             <ListItem button component={Link} to="/reports" sx={getMenuItemStyle('/reports')}>
-              <ListItemIcon sx={{ color: 'inherit' }}><ReportsIcon /></ListItemIcon>
+              <ListItemIcon sx={{ color: 'inherit', minWidth: collapsed ? '40px' : '56px' }}>
+                <ReportsIcon />
+              </ListItemIcon>
               {!collapsed && <ListItemText primary="Reports" />}
             </ListItem>
-            <Divider sx={{ backgroundColor: '#374151' }} />
+            <Divider sx={{ backgroundColor: '#374151', my: 1 }} />
             <ListItem button onClick={handleLogout} sx={getMenuItemStyle('/logout')}>
-              <ListItemIcon sx={{ color: 'inherit' }}><LogoutIcon /></ListItemIcon>
+              <ListItemIcon sx={{ color: 'inherit', minWidth: collapsed ? '40px' : '56px' }}>
+                <LogoutIcon />
+              </ListItemIcon>
               {!collapsed && <ListItemText primary="Logout" />}
             </ListItem>
           </>
         ) : (
           <>
             <ListItem button component={Link} to="/login" sx={getMenuItemStyle('/login')}>
-              <ListItemIcon sx={{ color: 'inherit' }}><LoginIcon /></ListItemIcon>
+              <ListItemIcon sx={{ color: 'inherit', minWidth: collapsed ? '40px' : '56px' }}>
+                <LoginIcon />
+              </ListItemIcon>
               {!collapsed && <ListItemText primary="Login" />}
             </ListItem>
             <ListItem button component={Link} to="/register" sx={getMenuItemStyle('/register')}>
-              <ListItemIcon sx={{ color: 'inherit' }}><RegisterIcon /></ListItemIcon>
+              <ListItemIcon sx={{ color: 'inherit', minWidth: collapsed ? '40px' : '56px' }}>
+                <RegisterIcon />
+              </ListItemIcon>
               {!collapsed && <ListItemText primary="Register" />}
             </ListItem>
           </>
@@ -116,7 +137,16 @@ const Navbar = () => {
       <CssBaseline />
       {/* Mobile menu button */}
       {isMobile && (
-        <IconButton sx={{ position: 'absolute', top: 16, left: 16, color: '#ffffff', zIndex: 1301 }} onClick={handleDrawerToggle}>
+        <IconButton 
+          sx={{ 
+            position: 'fixed', 
+            top: 16, 
+            left: 16, 
+            color: '#ffffff', 
+            zIndex: 1301 
+          }} 
+          onClick={handleDrawerToggle}
+        >
           <MenuIcon />
         </IconButton>
       )}
@@ -129,7 +159,12 @@ const Navbar = () => {
           ModalProps={{ keepMounted: true }}
           sx={{
             display: { xs: 'block', sm: 'none' },
-            '& .MuiDrawer-paper': { width: drawerWidth, backgroundColor: '#0d1b2a', color: '#ffffff' },
+            '& .MuiDrawer-paper': { 
+              width: drawerWidth, 
+              backgroundColor: '#0d1b2a', 
+              color: '#ffffff',
+              boxSizing: 'border-box',
+            },
           }}
         >
           {drawerContent(false)}
@@ -149,6 +184,7 @@ const Navbar = () => {
                 easing: theme.transitions.easing.sharp,
                 duration: theme.transitions.duration.enteringScreen,
               }),
+              boxSizing: 'border-box',
             },
           }}
           open
