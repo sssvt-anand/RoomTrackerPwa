@@ -520,7 +520,8 @@ const ExpenseList = ({
         </Table>
       </TableContainer>
 
-      <Menu
+      // Menu component with all fixes
+<Menu
   anchorEl={anchorEl}
   open={Boolean(anchorEl)}
   onClose={handleMenuClose}
@@ -531,21 +532,30 @@ const ExpenseList = ({
   {isAdmin && [
     <MenuItem 
       key="edit"
-      onClick={() => navigate(`/expenses/edit/${currentExpense.id}`)}
+      onClick={() => {
+        handleMenuClose();
+        navigate(`/expenses/edit/${currentExpense.id}`);
+      }}
     >
       <EditIcon fontSize="small" style={{ marginRight: 8 }} />
       Edit
     </MenuItem>,
     <MenuItem 
       key="delete"
-      onClick={handleDeleteClick}
+      onClick={() => {
+        handleMenuClose();
+        handleDeleteClick();
+      }}
     >
       <DeleteIcon fontSize="small" style={{ marginRight: 8 }} />
       Delete
     </MenuItem>,
     <MenuItem 
       key="clear"
-      onClick={handleClearClick}
+      onClick={() => {
+        handleMenuClose();
+        handleClearClick();
+      }}
     >
       <ClearIcon fontSize="small" style={{ marginRight: 8 }} />
       Clear
@@ -553,7 +563,7 @@ const ExpenseList = ({
   ]}
   <MenuItem 
     key="history"
-    onClick={handleHistoryClick}
+    onClick={handleHistoryClick} // handleMenuClose is called inside this function
   >
     <HistoryIcon fontSize="small" style={{ marginRight: 8 }} />
     View Full History

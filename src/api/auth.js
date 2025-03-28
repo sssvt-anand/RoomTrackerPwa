@@ -1,11 +1,11 @@
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
-const API_URL = 'https://room-1-ra2m.onrender.com/auth';
+const API_URL = 'https://room-1-ra2m.onrender.com';
 
 export const login = async (username, password) => {
   try {
-    const response = await axios.post(`${API_URL}/login`, { 
+    const response = await axios.post(`${API_URL}/auth/login`, { 
       username, 
       password 
     });
@@ -28,7 +28,7 @@ export const login = async (username, password) => {
 };
 
 export const register = async (userData) => {
-  const response = await axios.post(`${API_URL}/register`, userData);
+  const response = await axios.post(`${API_URL}/auth/register`, userData);
   return response.data;
 };
 
@@ -90,7 +90,7 @@ export const getCurrentUser = () => {
 };
 export const getMembers = async () => {
   try {
-    const response = await axios.get('/api/members', getAuthHeader());
+    const response = await axios.get(`${API_URL}/api/members`, getAuthHeader());
     // Transform the response data to match expected format
     return Array.isArray(response.data) 
       ? response.data 

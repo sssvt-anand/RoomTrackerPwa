@@ -1,9 +1,56 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Typography, CircularProgress } from '@material-ui/core';
+import { 
+  Container,
+  CircularProgress,
+  Typography,
+  Box,
+  Paper,
+  Avatar,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+  Chip,
+  makeStyles
+} from '@material-ui/core';
+import { Phone, Security } from '@material-ui/icons'; // Using Security icon instead
 import { getAllMembers } from '../api/members';
-import MemberItem from '../components/Members/MemberItem';
+
+const useStyles = makeStyles((theme) => ({
+  root: {
+    width: '100%',
+    backgroundColor: theme.palette.background.paper,
+  },
+  memberCard: {
+    marginBottom: theme.spacing(2),
+    padding: theme.spacing(2),
+    borderRadius: '12px',
+    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+    transition: 'transform 0.2s',
+    '&:hover': {
+      transform: 'translateY(-2px)',
+    },
+  },
+  adminChip: {
+    marginLeft: theme.spacing(1),
+    backgroundColor: theme.palette.secondary.main,
+    color: 'white',
+  },
+  phoneNumber: {
+    display: 'flex',
+    alignItems: 'center',
+    marginTop: theme.spacing(1),
+  },
+  avatar: {
+    backgroundColor: theme.palette.primary.main,
+    width: theme.spacing(7),
+    height: theme.spacing(7),
+    fontSize: '1.5rem',
+  },
+}));
 
 const MembersPage = () => {
+  const classes = useStyles();
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -23,20 +70,56 @@ const MembersPage = () => {
 
   if (loading) {
     return (
-      <Container style={{ textAlign: 'center', padding: 40 }}>
-        <CircularProgress />
-      </Container>
+      <Box display="flex" justifyContent="center" mt={4}>
+        <CircularProgress size={60} />
+      </Box>
     );
   }
 
   return (
-    <Container>
-      <Typography variant="h4" gutterBottom>
+    <Container maxWidth="md">
+      <Typography variant="h4" gutterBottom style={{ marginTop: 24, fontWeight: 600 }}>
         Members
       </Typography>
-      {members.map((member) => (
-        <MemberItem key={member.id} member={member} />
-      ))}
+      
+      <List className={classes.root}>
+        {members.map((member) => (
+          <Paper key={member.id} className={classes.memberCard}>
+            <ListItem alignItems="flex-start">
+              <ListItemAvatar>
+                <Avatar className={classes.avatar}>
+                  {member.name.charAt(0)}
+                </Avatar>
+              </ListItemAvatar>
+              <ListItemText
+                primary={
+                  <Box display="flex" alignItems="center">
+                    <Typography variant="h6" component="span">
+                      {member.name}
+                    </Typography>
+                    {member.admin && (
+                      <Chip
+                        icon={<Security style={{ color: 'white' }} />}
+                        label="Admin"
+                        className={classes.adminChip}
+                        size="small"
+                      />
+                    )}
+                  </Box>
+                }
+                secondary={
+                  <div className={classes.phoneNumber}>
+                    <Phone fontSize="small" style={{ marginRight: 8 }} />
+                    <Typography variant="body1" component="span">
+                      {member.mobileNumber}
+                    </Typography>
+                  </div>
+                }
+              />
+            </ListItem>
+          </Paper>
+        ))}
+      </List>
     </Container>
   );
 };

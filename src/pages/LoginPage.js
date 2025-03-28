@@ -122,20 +122,20 @@ const LoginPage = () => {
       username: formData.get('username').trim(),
       password: formData.get('password'),
     };
-
+  
     // Client-side validation
     if (!credentials.username || !credentials.password) {
       setError('Please fill in all fields');
       setLoading(false);
       return;
     }
-
+  
     try {
       const success = await login(credentials.username, credentials.password);
       if (!success) {
         throw new Error('Invalid credentials');
       }
-      navigate('/dashboard');
+      navigate('/');  // Changed from '/dashboard' to '/'
     } catch (err) {
       console.error('Login Error:', err);
       setError(err.response?.data?.message || 'Invalid username or password');

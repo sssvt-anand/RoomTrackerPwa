@@ -113,17 +113,39 @@ export const clearExpense = async (expenseId, memberId, amount) => {
 };
 
 // GET payment history for an expense
+
+
 export const getPaymentHistory = async (expenseId) => {
-  return authenticatedRequest(async () => {
+  try {
     const response = await axios.get(
-      `${API_URL}/${expenseId}/payments`, 
+      `${API_URL}/${expenseId}/payments`,
       getAuthHeader()
     );
-    return response.data.map(payment => ({
-      ...payment,
-      amount: formatAmount(payment.amount),
-      date: payment.date ? new Date(payment.date).toISOString() : null,
-      clearedBy: payment.member || { name: 'Unknown' }
-    }));
-  });
+
+     const paymentsWithMembers = await Promise.all(
+      response.data.map(async payment => {
+        try {
+          if (!payment.clearedBy) {
+            const memberResponse = await axios.get(
+               `${API_URL}/api/members/${payment.memberId}`,
+              getAuthHeader()
+            );
+            return {
+              ...payment,
+              clearedBy: memberResponse.data
+            };
+          }
+          return payment;
+        } catch (memberError) {
+          console.error('Error fetching member details:', memberError);
+          return payment; // Return original payment if member fetch fails
+        }
+      })
+    );
+
+    return paymentsWithMembers;
+  } catch (error) {
+    console.error('Error fetching payment history:', error);
+    throw error;
+  }
 };
