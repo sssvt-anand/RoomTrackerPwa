@@ -655,7 +655,7 @@ const ExpenseList = ({
         </DialogActions>
       </Dialog>
 
-      // In your ExpenseList component, find the history dialog and update it like this:
+      
       <Dialog
   open={historyDialogOpen}
   onClose={() => setHistoryDialogOpen(false)}
