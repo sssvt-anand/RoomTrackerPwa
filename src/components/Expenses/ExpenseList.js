@@ -46,6 +46,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import { useAuth } from '../../context/AuthContext';
 import { getPaymentHistory } from '../../api/expenses';
 
+
 const useStyles = makeStyles((theme) => ({
   tableContainer: {
     marginTop: theme.spacing(3),
@@ -127,7 +128,8 @@ const ExpenseList = ({
   loading = false, 
   refreshData = () => {},
   onDelete = () => {},
-  onClearExpense = () => {}
+  onClearExpense = () => {},
+  members = [] 
 }) => {
   const classes = useStyles();
   const navigate = useNavigate();
@@ -183,6 +185,22 @@ const ExpenseList = ({
       });
     } catch {
       return '';
+    }
+  };
+
+  const formatDateTime = (dateString) => {
+    if (!dateString) return 'Unknown time';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    } catch {
+      return 'Unknown time';
     }
   };
 
@@ -334,6 +352,8 @@ const ExpenseList = ({
       }
       
       if (!selectedMember) throw new Error('Please select a member');
+      const clearingMember = members.find(m => m.id === selectedMember);
+      if (!clearingMember) throw new Error('Selected member not found');
 
       // Optimistically update the UI
       const tempExpense = {
@@ -341,9 +361,8 @@ const ExpenseList = ({
         clearedAmount: (currentExpense.clearedAmount || 0) + amountToClear,
         remainingAmount: remainingAmount - amountToClear,
         lastClearedBy: { 
-          id: selectedMember, 
-          name: selectedMember === '1' ? 'Anand' : 
-                selectedMember === '2' ? 'Jio' : 'Srikanth' 
+          id: clearingMember.id, 
+          name: clearingMember.name  
         },
         lastClearedAt: new Date().toISOString(),
         paymentHistory: [
@@ -351,9 +370,8 @@ const ExpenseList = ({
           {
             amount: amountToClear,
             clearedBy: { 
-              id: selectedMember, 
-              name: selectedMember === '1' ? 'Anand' : 
-                    selectedMember === '2' ? 'Jio' : 'Srikanth' 
+              id: clearingMember.id, 
+              name: clearingMember.name 
             },
             clearedAt: new Date().toISOString()
           }
@@ -520,7 +538,7 @@ const ExpenseList = ({
         </Table>
       </TableContainer>
 
-      // Menu component with all fixes
+      
 <Menu
   anchorEl={anchorEl}
   open={Boolean(anchorEl)}
@@ -608,17 +626,19 @@ const ExpenseList = ({
             }}
           />
           <FormControl fullWidth>
-            <InputLabel>Cleared By</InputLabel>
-            <Select
-              value={selectedMember}
-              onChange={(e) => setSelectedMember(e.target.value)}
-              required
-            >
-              <MenuItem value={1}>Anand</MenuItem>
-              <MenuItem value={2}>Jio</MenuItem>
-              <MenuItem value={3}>Srikanth</MenuItem>
-            </Select>
-          </FormControl>
+    <InputLabel>Cleared By</InputLabel>
+    <Select
+      value={selectedMember}
+      onChange={(e) => setSelectedMember(e.target.value)}
+      required
+    >
+      {members.map(member => (
+        <MenuItem key={member.id} value={member.id}>
+          {member.name}
+        </MenuItem>
+      ))}
+    </Select>
+  </FormControl>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setClearDialogOpen(false)} color="primary">
@@ -635,50 +655,56 @@ const ExpenseList = ({
         </DialogActions>
       </Dialog>
 
+      // In your ExpenseList component, find the history dialog and update it like this:
       <Dialog
-        open={historyDialogOpen}
-        onClose={() => setHistoryDialogOpen(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>
-          Payment History for "{currentExpense.description || 'Expense'}" (Total: {formatAmount(currentExpense.amount)})
-        </DialogTitle>
-        <DialogContent dividers>
-          <List>
-            {paymentHistory.length > 0 ? (
-              paymentHistory.map((payment, index) => (
-                <React.Fragment key={index}>
-                  <ListItem>
-                    <Box className={classes.paymentItem}>
-                      <Avatar 
-                        className={classes.avatar}
-                        alt={payment.clearedBy?.name || 'Unknown'}
-                      >
-                        {(payment.clearedBy?.name || 'U').charAt(0)}
-                      </Avatar>
-                      <ListItemText
-                        primary={`${formatAmount(payment.amount)} by ${payment.clearedBy?.name || 'Unknown'}`}
-                        secondary={formatDate(payment.date)}
-                      />
-                    </Box>
-                  </ListItem>
-                  {index < paymentHistory.length - 1 && <Divider />}
-                </React.Fragment>
-              ))
-            ) : (
-              <ListItem>
-                <ListItemText primary="No payment history available" />
-              </ListItem>
-            )}
-          </List>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setHistoryDialogOpen(false)} color="primary">
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog>
+  open={historyDialogOpen}
+  onClose={() => setHistoryDialogOpen(false)}
+  maxWidth="md"
+  fullWidth
+>
+  <DialogTitle>
+    Payment History for "{currentExpense.description || 'Expense'}" (Total: {formatAmount(currentExpense.amount)})
+  </DialogTitle>
+  <DialogContent dividers>
+    <List>
+      {paymentHistory.length > 0 ? (
+        paymentHistory.map((payment, index) => (
+          <React.Fragment key={index}>
+            <ListItem>
+              <Box className={classes.paymentItem}>
+                <Avatar 
+                  className={classes.avatar}
+                  alt={payment.clearedBy?.name || 'Unknown'}
+                >
+                  {(payment.clearedBy?.name || 'U').charAt(0)}
+                </Avatar>
+                <ListItemText
+                  primary={`${formatAmount(payment.amount)} by ${payment.clearedBy?.name || 'Unknown'}`}
+                  secondary={
+                    <>
+                      {formatDateTime(payment.timestamp || payment.clearedAt)}
+                      {payment.expense?.description && ` • For: ${payment.expense.description}`}
+                    </>
+                  }
+                />
+              </Box>
+            </ListItem>
+            {index < paymentHistory.length - 1 && <Divider />}
+          </React.Fragment>
+        ))
+      ) : (
+        <ListItem>
+          <ListItemText primary="No payment history available" />
+        </ListItem>
+      )}
+    </List>
+  </DialogContent>
+  <DialogActions>
+    <Button onClick={() => setHistoryDialogOpen(false)} color="primary">
+      Close
+    </Button>
+  </DialogActions>
+</Dialog>
 
       <Snackbar
         open={snackbar.open}

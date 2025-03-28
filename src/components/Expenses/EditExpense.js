@@ -85,21 +85,22 @@ const EditExpense = () => {
     try {
       setSaving(true);
       setError('');
-
+  
       const formattedDate = expense.date.toISOString().split('T')[0];
-
+  
       await updateExpense(id, {
         description: expense.description,
         amount: parseFloat(expense.amount).toFixed(2),
         memberId: expense.memberId,
         date: formattedDate
       });
-
+  
       navigate('/expenses', { 
         state: { message: 'Expense updated successfully!', severity: 'success' } 
       });
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message || 'Failed to update expense');
+      console.error('Update error:', err);
     } finally {
       setSaving(false);
     }

@@ -12,23 +12,38 @@ import {
   Divider,
   CircularProgress,
   Snackbar,
+  TablePagination,
+  useMediaQuery,
+  useTheme,
+  Card,
+  CardContent
 } from '@material-ui/core';
+import { Alert } from '@material-ui/lab';
 import { useAuth } from '../context/AuthContext';
-import { getAllExpenses, getExpenseSummary } from '../api/expenses';
+import { getAllExpenses } from '../api/expenses';
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const [summary, setSummary] = useState({
-    total: 0,
-    totalCleared: 0,
-    totalRemaining: 0,
-    count: 0,
-  });
-  const [expenses, setExpenses] = useState([]);
+  const [allExpenses, setAllExpenses] = useState([]);
+  const [paginatedExpenses, setPaginatedExpenses] = useState([]);
   const [memberBalances, setMemberBalances] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('error');
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+  
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  // Define showSnackbar function
+  const showSnackbar = (message, severity = 'error') => {
+    setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
+    setSnackbarOpen(true);
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -41,48 +56,9 @@ const Dashboard = () => {
       // Store in localStorage for offline fallback
       localStorage.setItem('cachedExpenses', JSON.stringify(allExpenses));
 
-      // Calculate totals
-      const totalAmount = allExpenses.reduce(
-        (sum, expense) => sum + parseFloat(expense.amount),
-        0
-      );
-      const totalCleared = allExpenses.reduce(
-        (sum, expense) => sum + parseFloat(expense.clearedAmount || 0),
-        0
-      );
-      const totalRemaining = totalAmount - totalCleared;
-
-      setSummary({
-        total: totalAmount,
-        totalCleared,
-        totalRemaining,
-        count: allExpenses.length,
-      });
-
-      // Recent expenses (last 5)
-      setExpenses(allExpenses.slice(-5).reverse());
-
-      // Calculate member balances
-      const balances = {};
-      allExpenses.forEach((expense) => {
-        const memberName = expense.member.name;
-        if (!balances[memberName]) {
-          balances[memberName] = { total: 0, cleared: 0, remaining: 0 };
-        }
-        balances[memberName].total += parseFloat(expense.amount);
-        balances[memberName].cleared += parseFloat(expense.clearedAmount || 0);
-        balances[memberName].remaining += parseFloat(expense.amount) - parseFloat(expense.clearedAmount || 0);
-      });
-
-      const memberBalancesArray = Object.keys(balances).map((member) => ({
-        member,
-        total: balances[member].total,
-        cleared: balances[member].cleared,
-        remaining: balances[member].remaining,
-      }));
-
-      setMemberBalances(memberBalancesArray);
-
+      setAllExpenses(allExpenses);
+      updatePaginatedExpenses(allExpenses, page, rowsPerPage);
+      calculateSummary(allExpenses);
     } catch (err) {
       console.error("Failed to fetch data:", err);
       setError("Failed to load data. " + (navigator.onLine ? "Server error." : "You are offline."));
@@ -92,33 +68,86 @@ const Dashboard = () => {
       const cachedExpenses = localStorage.getItem('cachedExpenses');
       if (cachedExpenses) {
         const parsedExpenses = JSON.parse(cachedExpenses);
-        setExpenses(parsedExpenses.slice(-5).reverse());
-        
-        // Recalculate from cache
-        const totalAmount = parsedExpenses.reduce(
-          (sum, expense) => sum + parseFloat(expense.amount),
-          0
-        );
-        const totalCleared = parsedExpenses.reduce(
-          (sum, expense) => sum + parseFloat(expense.clearedAmount || 0),
-          0
-        );
-        
-        setSummary({
-          total: totalAmount,
-          totalCleared,
-          totalRemaining: totalAmount - totalCleared,
-          count: parsedExpenses.length,
-        });
+        setAllExpenses(parsedExpenses);
+        updatePaginatedExpenses(parsedExpenses, page, rowsPerPage);
+        calculateSummary(parsedExpenses);
+        showSnackbar('Showing cached data. You are offline.', 'warning');
       }
     } finally {
       setLoading(false);
     }
   };
 
+  const updatePaginatedExpenses = (expenses, page, rowsPerPage) => {
+    const startIndex = page * rowsPerPage;
+    const endIndex = startIndex + rowsPerPage;
+    setPaginatedExpenses(expenses.slice(startIndex, endIndex));
+  };
+
+  const calculateSummary = (expenses) => {
+    // Calculate totals
+    const totalAmount = expenses.reduce(
+      (sum, expense) => sum + parseFloat(expense.amount),
+      0
+    );
+    const totalCleared = expenses.reduce(
+      (sum, expense) => sum + parseFloat(expense.clearedAmount || 0),
+      0
+    );
+    const totalRemaining = totalAmount - totalCleared;
+
+    setSummary({
+      total: totalAmount,
+      totalCleared,
+      totalRemaining,
+      count: expenses.length,
+    });
+
+    // Calculate member balances
+    const balances = {};
+    expenses.forEach((expense) => {
+      const memberName = expense.member.name;
+      if (!balances[memberName]) {
+        balances[memberName] = { total: 0, cleared: 0, remaining: 0 };
+      }
+      balances[memberName].total += parseFloat(expense.amount);
+      balances[memberName].cleared += parseFloat(expense.clearedAmount || 0);
+      balances[memberName].remaining += parseFloat(expense.amount) - parseFloat(expense.clearedAmount || 0);
+    });
+
+    const memberBalancesArray = Object.keys(balances).map((member) => ({
+      member,
+      total: balances[member].total,
+      cleared: balances[member].cleared,
+      remaining: balances[member].remaining,
+    }));
+
+    setMemberBalances(memberBalancesArray);
+  };
+
+  const [summary, setSummary] = useState({
+    total: 0,
+    totalCleared: 0,
+    totalRemaining: 0,
+    count: 0,
+  });
+
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    updatePaginatedExpenses(allExpenses, page, rowsPerPage);
+  }, [page, rowsPerPage, allExpenses]);
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('en-IN', {
@@ -138,7 +167,7 @@ const Dashboard = () => {
   }
 
   return (
-    <Container maxWidth="lg" style={{ padding: '24px' }}>
+    <Container maxWidth="lg" style={{ padding: isMobile ? '16px' : '24px' }}>
       <Typography variant="h4" gutterBottom style={{ marginBottom: '24px' }}>
         Dashboard Overview
       </Typography>
@@ -146,44 +175,52 @@ const Dashboard = () => {
       {/* Summary Cards */}
       <Grid container spacing={3} style={{ marginBottom: '24px' }}>
         <Grid item xs={12} sm={6} md={3}>
-          <Paper style={{ padding: '16px', height: '100%' }}>
-            <Typography variant="h6" gutterBottom style={{ color: '#555' }}>
-              Total Expenses
-            </Typography>
-            <Typography variant="h4" style={{ fontWeight: 600 }}>
-              {formatCurrency(summary.total)}
-            </Typography>
-          </Paper>
+          <Card style={{ height: '100%' }}>
+            <CardContent>
+              <Typography variant="h6" gutterBottom style={{ color: '#555' }}>
+                Total Expenses
+              </Typography>
+              <Typography variant="h4" style={{ fontWeight: 600 }}>
+                {formatCurrency(summary.total)}
+              </Typography>
+            </CardContent>
+          </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <Paper style={{ padding: '16px', height: '100%' }}>
-            <Typography variant="h6" gutterBottom style={{ color: '#555' }}>
-              Total Cleared
-            </Typography>
-            <Typography variant="h4" style={{ fontWeight: 600, color: '#2e7d32' }}>
-              {formatCurrency(summary.totalCleared)}
-            </Typography>
-          </Paper>
+          <Card style={{ height: '100%' }}>
+            <CardContent>
+              <Typography variant="h6" gutterBottom style={{ color: '#555' }}>
+                Total Cleared
+              </Typography>
+              <Typography variant="h4" style={{ fontWeight: 600, color: '#2e7d32' }}>
+                {formatCurrency(summary.totalCleared)}
+              </Typography>
+            </CardContent>
+          </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <Paper style={{ padding: '16px', height: '100%' }}>
-            <Typography variant="h6" gutterBottom style={{ color: '#555' }}>
-              Total Remaining
-            </Typography>
-            <Typography variant="h4" style={{ fontWeight: 600, color: '#d32f2f' }}>
-              {formatCurrency(summary.totalRemaining)}
-            </Typography>
-          </Paper>
+          <Card style={{ height: '100%' }}>
+            <CardContent>
+              <Typography variant="h6" gutterBottom style={{ color: '#555' }}>
+                Total Remaining
+              </Typography>
+              <Typography variant="h4" style={{ fontWeight: 600, color: '#d32f2f' }}>
+                {formatCurrency(summary.totalRemaining)}
+              </Typography>
+            </CardContent>
+          </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <Paper style={{ padding: '16px', height: '100%' }}>
-            <Typography variant="h6" gutterBottom style={{ color: '#555' }}>
-              Total Transactions
-            </Typography>
-            <Typography variant="h4" style={{ fontWeight: 600 }}>
-              {summary.count}
-            </Typography>
-          </Paper>
+          <Card style={{ height: '100%' }}>
+            <CardContent>
+              <Typography variant="h6" gutterBottom style={{ color: '#555' }}>
+                Total Transactions
+              </Typography>
+              <Typography variant="h4" style={{ fontWeight: 600 }}>
+                {summary.count}
+              </Typography>
+            </CardContent>
+          </Card>
         </Grid>
       </Grid>
 
@@ -203,7 +240,7 @@ const Dashboard = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {expenses.map((expense, index) => (
+            {paginatedExpenses.map((expense, index) => (
               <TableRow key={index}>
                 <TableCell>{expense.member.name}</TableCell>
                 <TableCell>{expense.description}</TableCell>
@@ -213,6 +250,16 @@ const Dashboard = () => {
             ))}
           </TableBody>
         </Table>
+        <TablePagination
+          component="div"
+          count={allExpenses.length}
+          page={page}
+          onPageChange={handleChangePage}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          rowsPerPageOptions={[5, 10]}
+          labelRowsPerPage={isMobile ? 'Rows:' : 'Rows per page:'}
+        />
       </Paper>
 
       {/* Member Balances */}
@@ -252,8 +299,17 @@ const Dashboard = () => {
         open={snackbarOpen}
         autoHideDuration={6000}
         onClose={() => setSnackbarOpen(false)}
-        message={error}
-      />
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={() => setSnackbarOpen(false)} 
+          severity={snackbarSeverity}
+          elevation={6}
+          variant="filled"
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };

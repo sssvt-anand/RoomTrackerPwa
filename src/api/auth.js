@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
-const API_URL = 'https://room-1-ra2m.onrender.com';
+const API_URL = 'https://mutual-heida-personalanand-baf4e17d.koyeb.app';
 
 export const login = async (username, password) => {
   try {

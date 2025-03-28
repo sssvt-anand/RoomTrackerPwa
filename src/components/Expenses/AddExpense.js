@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { createExpense } from '../../api/expenses';
+import { getAllMembers } from '../../api/members'; // Import the API function
 import {
   Container,
   Button,
@@ -45,19 +46,36 @@ const AddExpense = () => {
     description: '',
     amount: '',
     memberId: user?.id || '',
-    date: new Date() // Initialize with current date
+    date: new Date()
   });
+  const [members, setMembers] = useState([]); // State for storing members from API
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [membersLoading, setMembersLoading] = useState(true); // Loading state for members
 
-  // List of members including current user
-  const members = [
-    { id: user?.id, name: 'Me' },
-    { id: '1', name: 'Anand' },
-    { id: '2', name: 'Jio' },
-    { id: '3', name: 'Srikanth' }
-  ].filter(m => m.id);
+  // Fetch members from API when component mounts
+  useEffect(() => {
+    const fetchMembers = async () => {
+      try {
+        setMembersLoading(true);
+        const membersData = await getAllMembers();
+        setMembers(membersData);
+        
+        // If current user isn't in the list, add them
+        if (user?.id && !membersData.some(m => m.id === user.id)) {
+          setMembers(prev => [...prev, { id: user.id, name: 'Me' }]);
+        }
+      } catch (err) {
+        console.error('Failed to fetch members', err);
+        setError('Failed to load members. Please try again.');
+      } finally {
+        setMembersLoading(false);
+      }
+    };
+
+    fetchMembers();
+  }, [user]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -116,7 +134,7 @@ const AddExpense = () => {
         description: '',
         amount: '',
         memberId: user?.id || '',
-        date: new Date() // Reset to current date
+        date: new Date()
       });
 
       // Optionally navigate back after delay
@@ -148,12 +166,19 @@ const AddExpense = () => {
               value={formData.memberId}
               onChange={handleChange}
               label="For Member"
+              disabled={membersLoading}
             >
-              {members.map(member => (
-                <MenuItem key={member.id} value={member.id}>
-                  {member.name}
+              {membersLoading ? (
+                <MenuItem disabled>
+                  <CircularProgress size={24} />
                 </MenuItem>
-              ))}
+              ) : (
+                members.map(member => (
+                  <MenuItem key={member.id} value={member.id}>
+                    {member.name}
+                  </MenuItem>
+                ))
+              )}
             </Select>
           </FormControl>
 
@@ -224,7 +249,7 @@ const AddExpense = () => {
               type="submit" 
               variant="contained" 
               color="primary"
-              disabled={loading}
+              disabled={loading || membersLoading}
               startIcon={loading ? <CircularProgress size={20} /> : null}
             >
               {loading ? 'Adding...' : 'Add Expense'}

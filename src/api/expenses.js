@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { refreshToken, getAuthHeader } from './auth';
 
-const API_URL = 'https://room-1-ra2m.onrender.com/api/expenses';
+const API_URL = 'https://mutual-heida-personalanand-baf4e17d.koyeb.app/api/expenses';
 
 const authenticatedRequest = async (requestFn) => {
   try {
@@ -122,23 +122,32 @@ export const getPaymentHistory = async (expenseId) => {
       getAuthHeader()
     );
 
-     const paymentsWithMembers = await Promise.all(
+    const paymentsWithMembers = await Promise.all(
       response.data.map(async payment => {
         try {
-          if (!payment.clearedBy) {
+          // Ensure we have member details
+          let member = payment.clearedBy;
+          if (!member && payment.memberId) {
             const memberResponse = await axios.get(
-               `${API_URL}/api/members/${payment.memberId}`,
+              `${API_URL}/members/${payment.memberId}`,
               getAuthHeader()
             );
-            return {
-              ...payment,
-              clearedBy: memberResponse.data
-            };
+            member = memberResponse.data;
           }
-          return payment;
+
+          return {
+            ...payment,
+            clearedBy: member || { name: 'Unknown' },
+            // Ensure date is properly formatted
+            clearedAt: payment.clearedAt || payment.date || new Date().toISOString()
+          };
         } catch (memberError) {
           console.error('Error fetching member details:', memberError);
-          return payment; // Return original payment if member fetch fails
+          return {
+            ...payment,
+            clearedBy: { name: 'Unknown' },
+            clearedAt: payment.clearedAt || payment.date || new Date().toISOString()
+          };
         }
       })
     );

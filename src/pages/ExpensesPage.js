@@ -17,18 +17,27 @@ import {
   MenuItem,
   InputLabel,
   FormControl,
-  Box
+  Box,
+  TablePagination,
+  useMediaQuery,
+  useTheme,
+  Autocomplete
 } from '@mui/material';
 import { Alert } from '@mui/material';
 import { getAllExpenses, deleteExpense, clearExpense, createExpense, updateExpense } from '../api/expenses';
+import { getAllMembers } from '../api/members';
 import { useAuth } from '../context/AuthContext';
 import ExpenseList from '../components/Expenses/ExpenseList';
 
 const ExpensesPage = () => {
   const navigate = useNavigate();
   const { token, isAdmin, user } = useAuth();
-  const [expenses, setExpenses] = useState([]);
+  const [allExpenses, setAllExpenses] = useState([]);
+  const [paginatedExpenses, setPaginatedExpenses] = useState([]);
+  const [members, setMembers] = useState([]);
+  const [filteredMembers, setFilteredMembers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [membersLoading, setMembersLoading] = useState(true);
   const [isClearing, setIsClearing] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -46,30 +55,80 @@ const ExpensesPage = () => {
     memberId: user?.id || '',
     date: new Date()
   });
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const members = [
-    { id: user?.id, name: 'Me' },
-    { id: '1', name: 'Anand' },
-    { id: '2', name: 'Jio' },
-    { id: '3', name: 'Srikanth' }
-  ].filter(m => m.id);
+  const fetchMembers = async () => {
+    try {
+      setMembersLoading(true);
+      const membersData = await getAllMembers();
+      // If current user isn't in the list, add them
+      if (user?.id && !membersData.some(m => m.id === user.id)) {
+        const updatedMembers = [...membersData, { id: user.id, name: 'Me' }];
+        setMembers(updatedMembers);
+        setFilteredMembers(updatedMembers);
+      } else {
+        setMembers(membersData);
+        setFilteredMembers(membersData);
+      }
+    } catch (err) {
+      console.error('Failed to fetch members', err);
+      showSnackbar('Failed to load members. Please try again.', 'error');
+    } finally {
+      setMembersLoading(false);
+    }
+  };
 
-  const fetchData = async () => {
+  const fetchExpenses = async () => {
     try {
       setLoading(true);
       const expensesData = await getAllExpenses();
-      setExpenses(expensesData);
+      setAllExpenses(expensesData);
+      updatePaginatedExpenses(expensesData, page, rowsPerPage);
+      
+      localStorage.setItem('cachedExpenses', JSON.stringify(expensesData));
     } catch (err) {
-      console.error('Failed to fetch data', err);
+      console.error('Failed to fetch expenses', err);
       showSnackbar('Failed to load expenses. Please try again.', 'error');
+      
+      const cachedExpenses = localStorage.getItem('cachedExpenses');
+      if (cachedExpenses) {
+        const parsedExpenses = JSON.parse(cachedExpenses);
+        setAllExpenses(parsedExpenses);
+        updatePaginatedExpenses(parsedExpenses, page, rowsPerPage);
+        showSnackbar('Showing cached data. You are offline.', 'warning');
+      }
     } finally {
       setLoading(false);
     }
   };
 
+  const updatePaginatedExpenses = (expenses, page, rowsPerPage) => {
+    const startIndex = page * rowsPerPage;
+    const endIndex = startIndex + rowsPerPage;
+    setPaginatedExpenses(expenses.slice(startIndex, endIndex));
+  };
+
   useEffect(() => {
-    fetchData();
+    fetchMembers();
+    fetchExpenses();
   }, []);
+
+  useEffect(() => {
+    updatePaginatedExpenses(allExpenses, page, rowsPerPage);
+  }, [page, rowsPerPage, allExpenses]);
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
 
   const showSnackbar = (message, severity = 'error') => {
     setSnackbar({ open: true, message, severity });
@@ -87,7 +146,8 @@ const ExpensesPage = () => {
     setCurrentExpense({
       ...expense,
       amount: parseFloat(expense.amount).toString(),
-      date: new Date(expense.date)
+      date: new Date(expense.date),
+      memberId: expense.member?.id || ''
     });
     setEditDialogOpen(true);
   };
@@ -109,7 +169,7 @@ const ExpensesPage = () => {
       
       showSnackbar('Expense updated successfully!', 'success');
       setEditDialogOpen(false);
-      await fetchData();
+      await fetchExpenses();
     } catch (error) {
       console.error('Update expense error:', error);
       showSnackbar(error.response?.data?.message || error.message, 'error');
@@ -125,7 +185,7 @@ const ExpensesPage = () => {
         return;
       }
       await deleteExpense(id);
-      await fetchData();
+      await fetchExpenses();
       showSnackbar('Expense deleted successfully', 'success');
     } catch (error) {
       console.error('Failed to delete expense', error);
@@ -146,10 +206,14 @@ const ExpensesPage = () => {
       if (isNaN(amountNum) || amountNum <= 0) {
         throw new Error('Invalid amount');
       }
-
+  
+      // Verify member exists
+      const memberExists = members.some(m => m.id === memberId);
+      if (!memberExists) throw new Error('Invalid member selected');
+  
       setIsClearing(true);
       await clearExpense(expenseId, memberId, amountNum.toFixed(2), token);
-      await fetchData();
+      await fetchExpenses();
       showSnackbar(`Successfully cleared ₹${amountNum.toFixed(2)}`, 'success');
     } catch (error) {
       console.error('Clear expense error:', error);
@@ -182,7 +246,7 @@ const ExpensesPage = () => {
         memberId: user?.id || '',
         date: new Date()
       });
-      await fetchData();
+      await fetchExpenses();
     } catch (error) {
       console.error('Add expense error:', error);
       showSnackbar(error.response?.data?.message || error.message, 'error');
@@ -191,7 +255,18 @@ const ExpensesPage = () => {
     }
   };
 
-  if (loading && !expenses.length) {
+  const filterMembers = (searchText) => {
+    if (!searchText) {
+      setFilteredMembers(members);
+      return;
+    }
+    const filtered = members.filter(member => 
+      member.name.toLowerCase().includes(searchText.toLowerCase())
+    );
+    setFilteredMembers(filtered);
+  };
+
+  if (loading && !paginatedExpenses.length) {
     return (
       <Container style={{ textAlign: 'center', padding: 40 }}>
         <CircularProgress />
@@ -207,39 +282,69 @@ const ExpensesPage = () => {
           color="primary"
           onClick={() => setAddDialogOpen(true)}
           style={{ marginBottom: 20 }}
+          fullWidth={isMobile}
+          disabled={membersLoading}
         >
           Add New Expense
         </Button>
         
         <ExpenseList 
-          expenses={expenses} 
-          onDelete={isAdmin ? handleDelete : null}
-          onClearExpense={isAdmin ? handleClearExpense : null}
-          onEdit={handleEditClick}
-          loading={loading}
-          refreshData={fetchData}
+  expenses={paginatedExpenses} 
+  onDelete={isAdmin ? handleDelete : null}
+  onClearExpense={isAdmin ? handleClearExpense : null}
+  onEdit={handleEditClick}
+  loading={loading}
+  refreshData={fetchExpenses}
+  members={members} 
+/>
+
+        <TablePagination
+          component="div"
+          count={allExpenses.length}
+          page={page}
+          onPageChange={handleChangePage}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          rowsPerPageOptions={[5, 10, 25]}
+          labelRowsPerPage={isMobile ? 'Rows:' : 'Rows per page:'}
+          style={{ marginTop: 16 }}
         />
 
         {/* Add Expense Dialog */}
-        <Dialog open={addDialogOpen} onClose={() => setAddDialogOpen(false)} maxWidth="sm" fullWidth>
+        <Dialog 
+          open={addDialogOpen} 
+          onClose={() => setAddDialogOpen(false)} 
+          maxWidth="sm" 
+          fullWidth
+          fullScreen={isMobile}
+        >
           <DialogTitle>Add New Expense</DialogTitle>
           <DialogContent>
             <Box mb={2}>
-              <FormControl fullWidth variant="outlined">
-                <InputLabel>For Member</InputLabel>
-                <Select
-                  name="memberId"
-                  value={newExpense.memberId}
-                  onChange={(e) => setNewExpense({...newExpense, memberId: e.target.value})}
-                  label="For Member"
-                >
-                  {members.map(member => (
-                    <MenuItem key={member.id} value={member.id}>
-                      {member.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <Autocomplete
+                options={filteredMembers}
+                getOptionLabel={(option) => option.name}
+                value={members.find(m => m.id === newExpense.memberId) || null}
+                onChange={(event, newValue) => {
+                  setNewExpense({
+                    ...newExpense,
+                    memberId: newValue?.id || ''
+                  });
+                }}
+                onInputChange={(event, newInputValue) => {
+                  filterMembers(newInputValue);
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="For Member"
+                    variant="outlined"
+                    fullWidth
+                  />
+                )}
+                loading={membersLoading}
+                disabled={membersLoading}
+              />
             </Box>
             <Box mb={2}>
               <TextField
@@ -286,7 +391,7 @@ const ExpensesPage = () => {
               onClick={handleAddExpense} 
               color="primary" 
               variant="contained"
-              disabled={isAdding || !newExpense.description || !newExpense.amount || !newExpense.memberId}
+              disabled={isAdding || membersLoading || !newExpense.description || !newExpense.amount || !newExpense.memberId}
             >
               {isAdding ? <CircularProgress size={24} /> : 'Add Expense'}
             </Button>
@@ -295,25 +400,40 @@ const ExpensesPage = () => {
 
         {/* Edit Expense Dialog */}
         {currentExpense && (
-          <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
+          <Dialog 
+            open={editDialogOpen} 
+            onClose={() => setEditDialogOpen(false)} 
+            maxWidth="sm" 
+            fullWidth
+            fullScreen={isMobile}
+          >
             <DialogTitle>Edit Expense</DialogTitle>
             <DialogContent>
               <Box mb={2}>
-                <FormControl fullWidth variant="outlined">
-                  <InputLabel>For Member</InputLabel>
-                  <Select
-                    name="memberId"
-                    value={currentExpense.memberId}
-                    onChange={(e) => setCurrentExpense({...currentExpense, memberId: e.target.value})}
-                    label="For Member"
-                  >
-                    {members.map(member => (
-                      <MenuItem key={member.id} value={member.id}>
-                        {member.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                <Autocomplete
+                  options={filteredMembers}
+                  getOptionLabel={(option) => option.name}
+                  value={members.find(m => m.id === currentExpense.memberId) || null}
+                  onChange={(event, newValue) => {
+                    setCurrentExpense({
+                      ...currentExpense,
+                      memberId: newValue?.id || ''
+                    });
+                  }}
+                  onInputChange={(event, newInputValue) => {
+                    filterMembers(newInputValue);
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="For Member"
+                      variant="outlined"
+                      fullWidth
+                    />
+                  )}
+                  loading={membersLoading}
+                  disabled={membersLoading}
+                />
               </Box>
               <Box mb={2}>
                 <TextField
@@ -360,7 +480,7 @@ const ExpensesPage = () => {
                 onClick={handleUpdateExpense} 
                 color="primary" 
                 variant="contained"
-                disabled={isEditing || !currentExpense.description || !currentExpense.amount || !currentExpense.memberId}
+                disabled={isEditing || membersLoading || !currentExpense.description || !currentExpense.amount || !currentExpense.memberId}
               >
                 {isEditing ? <CircularProgress size={24} /> : 'Update Expense'}
               </Button>
