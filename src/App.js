@@ -8,7 +8,6 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import Dashboard from './pages/Dashboard';
 import ExpensesPage from './pages/ExpensesPage';
-import ExpenseDetailPage from './pages/ExpenseDetailPage';
 import MembersPage from './pages/MembersPage';
 import ReportsPage from './pages/ReportsPage';
 import ProtectedRoute from './components/UI/ProtectedRoute';
@@ -37,20 +36,13 @@ function App() {
                 />
                 <Route
                   path="/expenses"
-                  element={
+                  element={ 
                     <ProtectedRoute>
                       <ExpensesPage />
                     </ProtectedRoute>
                   }
                 />
-                <Route
-                  path="/expenses/:id"
-                  element={
-                    <ProtectedRoute>
-                      <ExpenseDetailPage />
-                    </ProtectedRoute>
-                  }
-                />
+                
                 <Route
                   path="/members"
                   element={
