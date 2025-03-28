@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { refreshToken, getAuthHeader } from './auth';
 
-const API_URL = 'https://mutual-heida-personalanand-baf4e17d.koyeb.app/api/expenses';
+const API_URL = 'https://excellent-rosy-personalanand-185652cc.koyeb.app/api/expenses';
 
 const authenticatedRequest = async (requestFn) => {
   try {

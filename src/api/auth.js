@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
-const API_URL = 'https://mutual-heida-personalanand-baf4e17d.koyeb.app';
+const API_URL = 'https://excellent-rosy-personalanand-185652cc.koyeb.app';
 
 export const login = async (username, password) => {
   try {

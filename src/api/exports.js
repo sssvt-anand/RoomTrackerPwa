@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { getAuthHeader } from './auth';
 
-const API_URL = 'https://mutual-heida-personalanand-baf4e17d.koyeb.app/api/exports';
+const API_URL = 'https://excellent-rosy-personalanand-185652cc.koyeb.app/api/exports';
 
 const handleResponse = (response) => {
   if (response.status >= 200 && response.status < 300) {
