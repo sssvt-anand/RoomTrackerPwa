@@ -12,8 +12,7 @@ import {
   useMediaQuery,
   useTheme,
   CssBaseline,
-  Typography,
-  Button
+  Typography
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -25,8 +24,7 @@ import {
   Assessment as ReportsIcon,
   ExitToApp as LogoutIcon,
   AccountCircle as LoginIcon,
-  HowToReg as RegisterIcon,
-  Add as AddIcon
+  HowToReg as RegisterIcon
 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 
@@ -80,21 +78,6 @@ const Navbar = () => {
             </Typography>
           </Box>
           <Divider sx={{ backgroundColor: '#374151' }} />
-          
-          {user && (
-            <Box p={2}>
-              <Button
-                variant="contained"
-                sx={{ backgroundColor: '#2563eb', color: '#ffffff', '&:hover': { backgroundColor: '#1e40af' } }}
-                fullWidth
-                startIcon={<AddIcon />}
-                component={Link}
-                to="/expenses/new"
-              >
-                Add Expense
-              </Button>
-            </Box>
-          )}
         </>
       )}
       
@@ -193,7 +176,7 @@ const Navbar = () => {
           ml: { sm: `${desktopCollapsed ? collapsedWidth : drawerWidth}px` },
         }}
       >
-        {/* Page content will render here  anand */}
+        {/* Page content will render here */}
       </Box>
     </Box>
   );
