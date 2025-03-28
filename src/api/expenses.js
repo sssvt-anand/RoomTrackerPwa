@@ -46,15 +46,6 @@ export const getAllExpenses = async () => {
   });
 };
 
-// GET single expense details
-export const getExpenseDetails = async (id, token) => {
-  const response = await axios.get(`/api/expenses/${id}`, {
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  });
-  return response.data;
-};
 
 // GET expense summary
 export const getExpenseSummary = async () => {
@@ -71,16 +62,44 @@ export const createExpense = async (expenseData) => {
     return formatExpenseData(response.data);
   });
 };
-
-// PUT update existing expense
-export const updateExpense = async (id, data, token) => {
-  const response = await axios.put(`/api/expenses/${id}`, data, {
+    // GET single expense details
+export const getExpenseDetails = async (id, token) => {
+  const response = await axios.get(`${API_URL}/${id}`, {
     headers: {
       Authorization: `Bearer ${token}`
     }
   });
   return response.data;
 };
+
+// PUT update existing expense
+export const updateExpense = async (id, data, token) => {
+ 
+  if (!token) {
+    const error = new Error("Authentication token missing");
+    error.code = "MISSING_TOKEN";
+    throw error;
+  }
+
+  try {
+    const response = await axios.put(`${API_URL}/${id}`, data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Update failed:", {
+      status: error.response?.status,
+      data: error.response?.data,
+      config: error.config
+    });
+    throw error;
+  }
+};
+
+
 
 // DELETE expense
 export const deleteExpense = async (id) => {

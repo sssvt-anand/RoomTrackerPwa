@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getExpenseDetails, updateExpense } from '../../api/expenses';
+import { getAllMembers } from '../../api/members';
 import {
   Button,
   TextField,
@@ -14,7 +15,9 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  CircularProgress
+  CircularProgress,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -23,29 +26,27 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 const EditExpense = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { isAdmin, user } = useAuth();
+  const { isAdmin, user, token } = useAuth();
   const [expense, setExpense] = useState({
     description: '',
     amount: '',
     memberId: user?.id || '',
     date: new Date()
   });
+  const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-
-  const members = [
-    { id: user?.id, name: 'Me' },
-    { id: '1', name: 'Anand' },
-    { id: '2', name: 'Jio' },
-    { id: '3', name: 'Srikanth' }
-  ].filter(m => m.id);
+  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
-    const fetchExpense = async () => {
+    const fetchData = async () => {
       try {
         if (!isAdmin) throw new Error('Admin privileges required');
-  
+        
+        const membersData = await getAllMembers();
+        setMembers(membersData);
+        
         const expenseData = await getExpenseDetails(id);
         if (!expenseData) throw new Error('Expense not found');
 
@@ -62,7 +63,7 @@ const EditExpense = () => {
       }
     };
   
-    fetchExpense();
+    fetchData();
   }, [id, isAdmin, user?.id]);
 
   const handleChange = (e) => {
@@ -85,25 +86,35 @@ const EditExpense = () => {
     try {
       setSaving(true);
       setError('');
-  
+      
       const formattedDate = expense.date.toISOString().split('T')[0];
-  
-      await updateExpense(id, {
+      const payload = {
         description: expense.description,
         amount: parseFloat(expense.amount).toFixed(2),
         memberId: expense.memberId,
         date: formattedDate
-      });
-  
-      navigate('/expenses', { 
-        state: { message: 'Expense updated successfully!', severity: 'success' } 
-      });
+      };
+      
+      await updateExpense(id, payload, token);
+      
+      // Show success message
+      setSuccessMessage('Expense updated successfully!');
+      
+      // Navigate back after a short delay
+      setTimeout(() => {
+        navigate('/expenses');
+      }, 1500);
+      
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Failed to update expense');
       console.error('Update error:', err);
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleCloseSnackbar = () => {
+    setSuccessMessage('');
   };
 
   if (!isAdmin) {
@@ -132,24 +143,42 @@ const EditExpense = () => {
         </DialogTitle>
         
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, p: 3 }}>
-          {/* Member Selection */}
-          <FormControl fullWidth>
-            <InputLabel>Member</InputLabel>
+          {error && (
+            <Typography color="error" sx={{ mb: 2 }}>
+              {error}
+            </Typography>
+          )}
+
+          {/* Member Selection - Updated with better styling */}
+          <FormControl fullWidth sx={{ mt: 1 }}>
+            <InputLabel id="member-select-label">Member</InputLabel>
             <Select
+              labelId="member-select-label"
               name="memberId"
               value={expense.memberId}
               onChange={handleChange}
               required
+              label="Member"
+              sx={{
+                '& .MuiSelect-select': {
+                  padding: '12px 14px'
+                }
+              }}
             >
               {members.map(member => (
-                <MenuItem key={member.id} value={member.id}>
+                <MenuItem 
+                  key={member.id} 
+                  value={member.id}
+                  sx={{
+                    padding: '8px 16px'
+                  }}
+                >
                   {member.name}
                 </MenuItem>
               ))}
             </Select>
           </FormControl>
 
-          {/* Description */}
           <TextField
             fullWidth
             label="Description"
@@ -157,9 +186,9 @@ const EditExpense = () => {
             value={expense.description}
             onChange={handleChange}
             required
+            sx={{ mt: 1 }}
           />
 
-          {/* Amount */}
           <TextField
             fullWidth
             label="Amount (₹)"
@@ -168,14 +197,22 @@ const EditExpense = () => {
             value={expense.amount}
             onChange={handleChange}
             required
+            inputProps={{ step: "0.01" }}
+            sx={{ mt: 1 }}
           />
 
-          {/* Date Picker */}
           <DatePicker
             label="Date"
             value={expense.date}
             onChange={handleDateChange}
-            renderInput={(params) => <TextField {...params} fullWidth required />}
+            renderInput={(params) => (
+              <TextField 
+                {...params} 
+                fullWidth 
+                required 
+                sx={{ mt: 1 }} 
+              />
+            )}
           />
         </DialogContent>
 
@@ -202,6 +239,24 @@ const EditExpense = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Success Snackbar */}
+      <Snackbar
+        open={!!successMessage}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={handleCloseSnackbar} 
+          severity="success"
+          elevation={6}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {successMessage}
+        </Alert>
+      </Snackbar>
     </LocalizationProvider>
   );
 };

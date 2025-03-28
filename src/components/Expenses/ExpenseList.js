@@ -539,7 +539,7 @@ const ExpenseList = ({
       </TableContainer>
 
       
-<Menu
+      <Menu
   anchorEl={anchorEl}
   open={Boolean(anchorEl)}
   onClose={handleMenuClose}
@@ -548,16 +548,18 @@ const ExpenseList = ({
   }}
 >
   {isAdmin && [
-    <MenuItem 
-      key="edit"
-      onClick={() => {
-        handleMenuClose();
-        navigate(`/expenses/edit/${currentExpense.id}`);
-      }}
-    >
-      <EditIcon fontSize="small" style={{ marginRight: 8 }} />
-      Edit
-    </MenuItem>,
+    !currentExpense.fullyCleared && (
+      <MenuItem 
+        key="edit"
+        onClick={() => {
+          handleMenuClose();
+          navigate(`/expenses/edit/${currentExpense.id}`);
+        }}
+      >
+        <EditIcon fontSize="small" style={{ marginRight: 8 }} />
+        Edit
+      </MenuItem>
+    ),
     <MenuItem 
       key="delete"
       onClick={() => {
@@ -568,20 +570,22 @@ const ExpenseList = ({
       <DeleteIcon fontSize="small" style={{ marginRight: 8 }} />
       Delete
     </MenuItem>,
-    <MenuItem 
-      key="clear"
-      onClick={() => {
-        handleMenuClose();
-        handleClearClick();
-      }}
-    >
-      <ClearIcon fontSize="small" style={{ marginRight: 8 }} />
-      Clear
-    </MenuItem>
-  ]}
+    !currentExpense.fullyCleared && (
+      <MenuItem 
+        key="clear"
+        onClick={() => {
+          handleMenuClose();
+          handleClearClick();
+        }}
+      >
+        <ClearIcon fontSize="small" style={{ marginRight: 8 }} />
+        Clear
+      </MenuItem>
+    )
+  ].filter(Boolean)}
   <MenuItem 
     key="history"
-    onClick={handleHistoryClick} // handleMenuClose is called inside this function
+    onClick={handleHistoryClick}
   >
     <HistoryIcon fontSize="small" style={{ marginRight: 8 }} />
     View Full History

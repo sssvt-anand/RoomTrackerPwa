@@ -70,17 +70,6 @@ const Navbar = () => {
       
       <Divider sx={{ backgroundColor: '#374151' }} />
       
-      {!collapsed && (
-        <>
-          <Box sx={{ padding: '16px' }}>
-            <Typography variant="h6" noWrap>
-              Room Expenses
-            </Typography>
-          </Box>
-          <Divider sx={{ backgroundColor: '#374151' }} />
-        </>
-      )}
-      
       <List>
         {user ? (
           <>
