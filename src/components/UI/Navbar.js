@@ -139,31 +139,40 @@ const Navbar = () => {
       {isMobile && (
         <IconButton 
           sx={{ 
-            position: 'fixed', 
-            top: 16, 
-            left: 16, 
-            color: '#ffffff', 
-            zIndex: 1301 
+            position: 'fixed',
+            top: 16,
+            left: 16,
+            color: '#ffffff',
+            zIndex: theme.zIndex.drawer + 2,
           }} 
           onClick={handleDrawerToggle}
         >
           <MenuIcon />
         </IconButton>
       )}
+      
       <Box component="nav" sx={{ width: { sm: desktopCollapsed ? collapsedWidth : drawerWidth }, flexShrink: { sm: 0 } }}>
         {/* Mobile Drawer */}
         <Drawer
           variant="temporary"
           open={mobileOpen}
           onClose={handleDrawerToggle}
-          ModalProps={{ keepMounted: true }}
+          ModalProps={{ 
+            keepMounted: true,
+            BackdropProps: {
+              style: {
+                backgroundColor: 'rgba(0,0,0,0.5)'
+              }
+            }
+          }}
           sx={{
             display: { xs: 'block', sm: 'none' },
             '& .MuiDrawer-paper': { 
-              width: drawerWidth, 
-              backgroundColor: '#0d1b2a', 
+              width: drawerWidth,
+              backgroundColor: '#0d1b2a',
               color: '#ffffff',
               boxSizing: 'border-box',
+              zIndex: theme.zIndex.drawer + 1,
             },
           }}
         >
@@ -192,6 +201,7 @@ const Navbar = () => {
           {drawerContent(desktopCollapsed)}
         </Drawer>
       </Box>
+      
       <Box
         component="main"
         sx={{ 
@@ -199,9 +209,10 @@ const Navbar = () => {
           p: 3, 
           width: { sm: `calc(100% - ${desktopCollapsed ? collapsedWidth : drawerWidth}px)` },
           ml: { sm: `${desktopCollapsed ? collapsedWidth : drawerWidth}px` },
+          pt: { xs: '80px', sm: 3 }, // Added padding top for mobile
         }}
       >
-        {/* Page content will render here */}
+        {/* This is where your page content (AddExpense) will render */}
       </Box>
     </Box>
   );

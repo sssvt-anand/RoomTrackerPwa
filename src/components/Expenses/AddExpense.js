@@ -203,7 +203,7 @@ const AddExpense = () => {
       <Paper elevation={3} className={classes.paper}>
         <Box className={classes.titleWrapper}>
           <Typography variant="h5" className={classes.formTitle}>
-            Add Expense
+            Add New Expense
           </Typography>
         </Box>
         

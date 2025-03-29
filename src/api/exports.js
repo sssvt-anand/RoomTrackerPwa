@@ -70,7 +70,7 @@ export const exportByMember = async (memberId) => {
     console.error('Export by member error:', error);
     throw error;
   }
-};
+};  
 export default {
   getMonthlyExports,
   getYearlyExports,
