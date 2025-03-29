@@ -76,7 +76,7 @@ export const getExpenseDetails = async (id, token) => {
 export const updateExpense = async (id, data, token) => {
  
   if (!token) {
-    const error = new Error("Authentication token missing");
+    const error = new Error("Authentication token missing ,Please Login again");
     error.code = "MISSING_TOKEN";
     throw error;
   }

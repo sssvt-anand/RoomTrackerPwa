@@ -21,7 +21,8 @@ import {
   TablePagination,
   useMediaQuery,
   useTheme,
-  Autocomplete
+  Autocomplete,
+  Typography
 } from '@mui/material';
 import { Alert } from '@mui/material';
 import { getAllExpenses, deleteExpense, clearExpense, createExpense, updateExpense } from '../api/expenses';
@@ -289,14 +290,14 @@ const ExpensesPage = () => {
         </Button>
         
         <ExpenseList 
-  expenses={paginatedExpenses} 
-  onDelete={isAdmin ? handleDelete : null}
-  onClearExpense={isAdmin ? handleClearExpense : null}
-  onEdit={handleEditClick}
-  loading={loading}
-  refreshData={fetchExpenses}
-  members={members} 
-/>
+          expenses={paginatedExpenses} 
+          onDelete={isAdmin ? handleDelete : null}
+          onClearExpense={isAdmin ? handleClearExpense : null}
+          onEdit={handleEditClick}
+          loading={loading}
+          refreshData={fetchExpenses}
+          members={members} 
+        />
 
         <TablePagination
           component="div"
@@ -310,7 +311,7 @@ const ExpensesPage = () => {
           style={{ marginTop: 16 }}
         />
 
-        {/* Add Expense Dialog */}
+        {/* Add Expense Dialog with Centered Title */}
         <Dialog 
           open={addDialogOpen} 
           onClose={() => setAddDialogOpen(false)} 
@@ -318,7 +319,13 @@ const ExpensesPage = () => {
           fullWidth
           fullScreen={isMobile}
         >
-          <DialogTitle>Add New Expense</DialogTitle>
+          <DialogTitle>
+            <Box display="flex" justifyContent="center" width="100%">
+              <Typography variant="h6" fontWeight="bold">
+                Add New Expense
+              </Typography>
+            </Box>
+          </DialogTitle>
           <DialogContent>
             <Box mb={2}>
               <Autocomplete

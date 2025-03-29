@@ -41,6 +41,20 @@ const useStyles = makeStyles((theme) => ({
       margin: 0,
     },
   },
+  titleWrapper: {
+    display: 'flex',
+    justifyContent: 'center',
+    width: '100%',
+    marginBottom: theme.spacing(4),
+    [theme.breakpoints.down('sm')]: {
+      marginBottom: theme.spacing(3),
+    },
+  },
+  formTitle: {
+    fontWeight: 'bold',
+    textAlign: 'center',
+    width: '100%',
+  },
   formField: {
     marginBottom: theme.spacing(3),
   },
@@ -64,15 +78,6 @@ const useStyles = makeStyles((theme) => ({
   requiredAsterisk: {
     color: theme.palette.error.main,
     marginLeft: theme.spacing(0.5),
-  },
-  formTitle: {
-    marginBottom: theme.spacing(4),
-    fontWeight: 'bold',
-    textAlign: 'center', // Added to center the title
-    width: '100%', // Ensure it takes full width
-    [theme.breakpoints.down('sm')]: {
-      marginBottom: theme.spacing(3),
-    },
   },
 }));
 
@@ -196,9 +201,9 @@ const AddExpense = () => {
       disableGutters={isMobile}
     >
       <Paper elevation={3} className={classes.paper}>
-        <Box display="flex" justifyContent="center">
+        <Box className={classes.titleWrapper}>
           <Typography variant="h5" className={classes.formTitle}>
-            Add New Expense
+            Add Expense
           </Typography>
         </Box>
         
