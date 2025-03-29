@@ -28,7 +28,7 @@ const useStyles = makeStyles((theme) => ({
     paddingTop: theme.spacing(4),
     paddingBottom: theme.spacing(4),
     [theme.breakpoints.down('sm')]: {
-      paddingTop: theme.spacing(8), // More space for mobile header
+      paddingTop: theme.spacing(8),
       paddingLeft: theme.spacing(2),
       paddingRight: theme.spacing(2),
     },
@@ -38,7 +38,7 @@ const useStyles = makeStyles((theme) => ({
     borderRadius: 12,
     [theme.breakpoints.down('sm')]: {
       padding: theme.spacing(3),
-      margin: 0, // Remove margin on mobile
+      margin: 0,
     },
   },
   formField: {
@@ -68,6 +68,8 @@ const useStyles = makeStyles((theme) => ({
   formTitle: {
     marginBottom: theme.spacing(4),
     fontWeight: 'bold',
+    textAlign: 'center', // Added to center the title
+    width: '100%', // Ensure it takes full width
     [theme.breakpoints.down('sm')]: {
       marginBottom: theme.spacing(3),
     },
@@ -194,9 +196,11 @@ const AddExpense = () => {
       disableGutters={isMobile}
     >
       <Paper elevation={3} className={classes.paper}>
-        <Typography variant="h5" className={classes.formTitle}>
-          Add New Expense
-        </Typography>
+        <Box display="flex" justifyContent="center">
+          <Typography variant="h5" className={classes.formTitle}>
+            Add New Expense
+          </Typography>
+        </Box>
         
         <form onSubmit={handleSubmit}>
           <FormControl 
