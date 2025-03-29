@@ -23,7 +23,8 @@ export const getMonthlyExports = async (start = null, end = null) => {
     
     const response = await axios.get(`${API_URL}/monthly`, {
       ...getAuthHeader(),
-      params
+      params,
+      responseType: 'blob' // Important for file downloads
     });
     return handleResponse(response);
   } catch (error) {
@@ -39,7 +40,8 @@ export const getYearlyExports = async (start = null, end = null) => {
     
     const response = await axios.get(`${API_URL}/yearly`, {
       ...getAuthHeader(),
-      params
+      params,
+      responseType: 'blob'
     });
     return handleResponse(response);
   } catch (error) {
@@ -54,4 +56,24 @@ export const getExportHistory = async () => {
   } catch (error) {
     return handleError(error);
   }
+};
+
+// Add this new function for member exports
+export const exportByMember = async (memberId) => {
+  try {
+    const response = await axios.get(`${API_URL}/member/${memberId}`, {
+      ...getAuthHeader(),
+      responseType: 'blob' // Important for file downloads
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Export by member error:', error);
+    throw error;
+  }
+};
+export default {
+  getMonthlyExports,
+  getYearlyExports,
+  getExportHistory,
+  exportByMember
 };
