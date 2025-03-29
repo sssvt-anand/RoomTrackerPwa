@@ -25,19 +25,20 @@ import 'date-fns';
 
 const useStyles = makeStyles((theme) => ({
   root: {
-    marginTop: theme.spacing(4),
-    marginLeft: theme.spacing(30),
+    paddingTop: theme.spacing(4),
+    paddingBottom: theme.spacing(4),
     [theme.breakpoints.down('sm')]: {
-      marginLeft: 0,
-      paddingTop: theme.spacing(8),
+      paddingTop: theme.spacing(8), // More space for mobile header
+      paddingLeft: theme.spacing(2),
+      paddingRight: theme.spacing(2),
     },
   },
   paper: {
     padding: theme.spacing(4),
     borderRadius: 12,
     [theme.breakpoints.down('sm')]: {
-      margin: theme.spacing(2),
       padding: theme.spacing(3),
+      margin: 0, // Remove margin on mobile
     },
   },
   formField: {
@@ -47,6 +48,10 @@ const useStyles = makeStyles((theme) => ({
     marginTop: theme.spacing(4),
     display: 'flex',
     justifyContent: 'space-between',
+    gap: theme.spacing(2),
+    [theme.breakpoints.down('sm')]: {
+      flexDirection: 'column-reverse',
+    },
   },
   amountRemaining: {
     marginTop: theme.spacing(2),
@@ -56,11 +61,16 @@ const useStyles = makeStyles((theme) => ({
     textAlign: 'center',
     fontWeight: 'bold',
   },
-  requiredLabel: {
-    '&:after': {
-      content: "' *'",
-      color: theme.palette.error.main,
-    }
+  requiredAsterisk: {
+    color: theme.palette.error.main,
+    marginLeft: theme.spacing(0.5),
+  },
+  formTitle: {
+    marginBottom: theme.spacing(4),
+    fontWeight: 'bold',
+    [theme.breakpoints.down('sm')]: {
+      marginBottom: theme.spacing(3),
+    },
   },
 }));
 
@@ -82,7 +92,7 @@ const AddExpense = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [membersLoading, setMembersLoading] = useState(true);
-  const [remainingAmount, setRemainingAmount] = useState(440.00); // Static for now
+  const [remainingAmount, setRemainingAmount] = useState(440.00);
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -161,9 +171,7 @@ const AddExpense = () => {
         date: new Date()
       });
 
-      // Update remaining amount (in a real app, this would come from an API)
       setRemainingAmount(prev => prev - amount);
-
       setTimeout(() => navigate('/expenses'), 1500);
     } catch (err) {
       setError(err.response?.data?.message || err.message);
@@ -172,17 +180,21 @@ const AddExpense = () => {
     }
   };
 
+  const renderLabelWithAsterisk = (labelText) => (
+    <span>
+      {labelText}
+      <span className={classes.requiredAsterisk}>*</span>
+    </span>
+  );
+
   return (
     <Container 
       maxWidth="sm" 
       className={classes.root}
-      style={{
-        paddingLeft: isMobile ? theme.spacing(2) : 0,
-        paddingRight: isMobile ? theme.spacing(2) : 0,
-      }}
+      disableGutters={isMobile}
     >
       <Paper elevation={3} className={classes.paper}>
-        <Typography variant="h5" gutterBottom style={{ fontWeight: 'bold' }}>
+        <Typography variant="h5" className={classes.formTitle}>
           Add New Expense
         </Typography>
         
@@ -193,12 +205,12 @@ const AddExpense = () => {
             className={classes.formField}
             required
           >
-            <InputLabel className={classes.requiredLabel}>For Member</InputLabel>
+            <InputLabel>{renderLabelWithAsterisk('For Member')}</InputLabel>
             <Select
               name="memberId"
               value={formData.memberId}
               onChange={handleChange}
-              label="For Member"
+              label={renderLabelWithAsterisk('For Member')}
               disabled={membersLoading}
             >
               {membersLoading ? (
@@ -217,11 +229,7 @@ const AddExpense = () => {
 
           <TextField
             fullWidth
-            label={
-              <span>
-                Description <span style={{ color: theme.palette.error.main }}>*</span>
-              </span>
-            }
+            label={renderLabelWithAsterisk('Description')}
             name="description"
             value={formData.description}
             onChange={handleChange}
@@ -234,11 +242,7 @@ const AddExpense = () => {
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label={
-                  <span>
-                    Amount ($) <span style={{ color: theme.palette.error.main }}>*</span>
-                  </span>
-                }
+                label={renderLabelWithAsterisk('Amount ($)')}
                 name="amount"
                 type="number"
                 value={formData.amount}
@@ -253,11 +257,7 @@ const AddExpense = () => {
             </Grid>
             <Grid item xs={12} sm={6}>
               <DatePicker
-                label={
-                  <span>
-                    Expense Date <span style={{ color: theme.palette.error.main }}>*</span>
-                  </span>
-                }
+                label={renderLabelWithAsterisk('Expense Date')}
                 value={formData.date}
                 onChange={handleDateChange}
                 renderInput={(params) => (
@@ -296,7 +296,7 @@ const AddExpense = () => {
               onClick={() => navigate('/expenses')}
               disabled={loading}
               size="large"
-              style={{ minWidth: 120 }}
+              fullWidth={isMobile}
             >
               CANCEL
             </Button>
@@ -307,7 +307,7 @@ const AddExpense = () => {
               disabled={loading || membersLoading}
               startIcon={loading ? <CircularProgress size={20} /> : null}
               size="large"
-              style={{ minWidth: 120 }}
+              fullWidth={isMobile}
             >
               {loading ? 'ADDING...' : 'ADD EXPENSE'}
             </Button>
