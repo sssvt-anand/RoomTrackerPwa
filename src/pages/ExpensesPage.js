@@ -286,7 +286,7 @@ const ExpensesPage = () => {
           fullWidth={isMobile}
           disabled={membersLoading}
         >
-          Add New Expense
+          Add Expenses
         </Button>
         
         <ExpenseList 
