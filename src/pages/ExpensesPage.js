@@ -313,8 +313,7 @@ const ExpensesPage = () => {
           style={{ marginTop: 16 }}
         />
 
-        {/* Add Expense Dialog with Centered Title */}
-        {/* Add Expense Dialog with Improved Styling */}
+        {/* Add Expense Dialog - Updated to match Edit style */}
 <Dialog 
   open={addDialogOpen} 
   onClose={() => setAddDialogOpen(false)} 
@@ -342,7 +341,11 @@ const ExpensesPage = () => {
     </Box>
   </DialogTitle>
   <DialogContent dividers sx={{ padding: '24px 16px' }}>
+    {/* Member Field */}
     <Box mb={3}>
+      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+        For Member
+      </Typography>
       <Autocomplete
         options={filteredMembers}
         getOptionLabel={(option) => option.name}
@@ -353,67 +356,70 @@ const ExpensesPage = () => {
             memberId: newValue?.id || ''
           });
         }}
-        onInputChange={(event, newInputValue) => {
-          filterMembers(newInputValue);
-        }}
         renderInput={(params) => (
           <TextField
             {...params}
-            label="For Member"
             variant="outlined"
-            fullWidth
             size="small"
             sx={{
               '& .MuiOutlinedInput-root': {
                 borderRadius: '8px',
+                backgroundColor: theme.palette.background.paper
               }
             }}
           />
         )}
-        loading={membersLoading}
-        disabled={membersLoading}
       />
     </Box>
-    
+
+    {/* Description Field */}
     <Box mb={3}>
+      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+        Description *
+      </Typography>
       <TextField
         fullWidth
-        label="Description"
         value={newExpense.description}
         onChange={(e) => setNewExpense({...newExpense, description: e.target.value})}
         variant="outlined"
         size="small"
-        required
         sx={{
           '& .MuiOutlinedInput-root': {
             borderRadius: '8px',
+            backgroundColor: theme.palette.background.paper
           }
         }}
       />
     </Box>
-    
+
+    {/* Amount Field */}
     <Box mb={3}>
+      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+        Amount (₹) *
+      </Typography>
       <TextField
         fullWidth
-        label="Amount (₹)"
         type="number"
         value={newExpense.amount}
         onChange={(e) => setNewExpense({...newExpense, amount: e.target.value})}
         variant="outlined"
         size="small"
         inputProps={{ step: "0.01", min: "0.01" }}
-        required
         sx={{
           '& .MuiOutlinedInput-root': {
             borderRadius: '8px',
+            backgroundColor: theme.palette.background.paper
           }
         }}
       />
     </Box>
-    
+
+    {/* Date Field */}
     <Box mb={2}>
+      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+        Expense Date *
+      </Typography>
       <DatePicker
-        label="Expense Date"
         value={newExpense.date}
         onChange={(date) => setNewExpense({...newExpense, date})}
         slotProps={{
@@ -421,10 +427,10 @@ const ExpensesPage = () => {
             fullWidth: true,
             variant: 'outlined',
             size: 'small',
-            required: true,
             sx: {
               '& .MuiOutlinedInput-root': {
                 borderRadius: '8px',
+                backgroundColor: theme.palette.background.paper
               }
             }
           }
@@ -449,7 +455,7 @@ const ExpensesPage = () => {
       onClick={handleAddExpense} 
       color="primary" 
       variant="contained"
-      disabled={isAdding || membersLoading || !newExpense.description || !newExpense.amount || !newExpense.memberId}
+      disabled={isAdding || !newExpense.description || !newExpense.amount}
       sx={{
         borderRadius: '8px',
         textTransform: 'none',
