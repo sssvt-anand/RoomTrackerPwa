@@ -3,6 +3,8 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import CloseIcon from '@mui/icons-material/Close';
+import IconButton from '@mui/icons-material/Close';
 import {
   Container,
   Button,
@@ -312,98 +314,157 @@ const ExpensesPage = () => {
         />
 
         {/* Add Expense Dialog with Centered Title */}
-        <Dialog 
-          open={addDialogOpen} 
-          onClose={() => setAddDialogOpen(false)} 
-          maxWidth="sm" 
-          fullWidth
-          fullScreen={isMobile}
-        >
-          <DialogTitle>
-            <Box display="flex" justifyContent="center" width="100%">
-              <Typography variant="h6" fontWeight="bold">
-                Add New Expense
-              </Typography>
-            </Box>
-          </DialogTitle>
-          <DialogContent>
-            <Box mb={2}>
-              <Autocomplete
-                options={filteredMembers}
-                getOptionLabel={(option) => option.name}
-                value={members.find(m => m.id === newExpense.memberId) || null}
-                onChange={(event, newValue) => {
-                  setNewExpense({
-                    ...newExpense,
-                    memberId: newValue?.id || ''
-                  });
-                }}
-                onInputChange={(event, newInputValue) => {
-                  filterMembers(newInputValue);
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="For Member"
-                    variant="outlined"
-                    fullWidth
-                  />
-                )}
-                loading={membersLoading}
-                disabled={membersLoading}
-              />
-            </Box>
-            <Box mb={2}>
-              <TextField
-                fullWidth
-                label="Description"
-                value={newExpense.description}
-                onChange={(e) => setNewExpense({...newExpense, description: e.target.value})}
-                variant="outlined"
-                required
-              />
-            </Box>
-            <Box mb={2}>
-              <TextField
-                fullWidth
-                label="Amount (₹)"
-                type="number"
-                value={newExpense.amount}
-                onChange={(e) => setNewExpense({...newExpense, amount: e.target.value})}
-                variant="outlined"
-                inputProps={{ step: "0.01", min: "0.01" }}
-                required
-              />
-            </Box>
-            <Box mb={2}>
-              <DatePicker
-                label="Expense Date"
-                value={newExpense.date}
-                onChange={(date) => setNewExpense({...newExpense, date})}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    variant: 'outlined',
-                    required: true
-                  }
-                }}
-              />
-            </Box>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setAddDialogOpen(false)} color="primary">
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleAddExpense} 
-              color="primary" 
-              variant="contained"
-              disabled={isAdding || membersLoading || !newExpense.description || !newExpense.amount || !newExpense.memberId}
-            >
-              {isAdding ? <CircularProgress size={24} /> : 'Add Expense'}
-            </Button>
-          </DialogActions>
-        </Dialog>
+        {/* Add Expense Dialog with Improved Styling */}
+<Dialog 
+  open={addDialogOpen} 
+  onClose={() => setAddDialogOpen(false)} 
+  maxWidth="sm" 
+  fullWidth
+  fullScreen={isMobile}
+  PaperProps={{
+    style: {
+      borderRadius: 12,
+      padding: isMobile ? 0 : '16px 8px'
+    }
+  }}
+>
+  <DialogTitle>
+    <Box display="flex" justifyContent="space-between" alignItems="center">
+      <Typography variant="h6" fontWeight="bold" color="primary">
+        Add New Expense
+      </Typography>
+      <IconButton 
+        onClick={() => setAddDialogOpen(false)} 
+        sx={{ color: theme.palette.grey[500] }}
+      >
+        <CloseIcon />
+      </IconButton>
+    </Box>
+  </DialogTitle>
+  <DialogContent dividers sx={{ padding: '24px 16px' }}>
+    <Box mb={3}>
+      <Autocomplete
+        options={filteredMembers}
+        getOptionLabel={(option) => option.name}
+        value={members.find(m => m.id === newExpense.memberId) || null}
+        onChange={(event, newValue) => {
+          setNewExpense({
+            ...newExpense,
+            memberId: newValue?.id || ''
+          });
+        }}
+        onInputChange={(event, newInputValue) => {
+          filterMembers(newInputValue);
+        }}
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            label="For Member"
+            variant="outlined"
+            fullWidth
+            size="small"
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '8px',
+              }
+            }}
+          />
+        )}
+        loading={membersLoading}
+        disabled={membersLoading}
+      />
+    </Box>
+    
+    <Box mb={3}>
+      <TextField
+        fullWidth
+        label="Description"
+        value={newExpense.description}
+        onChange={(e) => setNewExpense({...newExpense, description: e.target.value})}
+        variant="outlined"
+        size="small"
+        required
+        sx={{
+          '& .MuiOutlinedInput-root': {
+            borderRadius: '8px',
+          }
+        }}
+      />
+    </Box>
+    
+    <Box mb={3}>
+      <TextField
+        fullWidth
+        label="Amount (₹)"
+        type="number"
+        value={newExpense.amount}
+        onChange={(e) => setNewExpense({...newExpense, amount: e.target.value})}
+        variant="outlined"
+        size="small"
+        inputProps={{ step: "0.01", min: "0.01" }}
+        required
+        sx={{
+          '& .MuiOutlinedInput-root': {
+            borderRadius: '8px',
+          }
+        }}
+      />
+    </Box>
+    
+    <Box mb={2}>
+      <DatePicker
+        label="Expense Date"
+        value={newExpense.date}
+        onChange={(date) => setNewExpense({...newExpense, date})}
+        slotProps={{
+          textField: {
+            fullWidth: true,
+            variant: 'outlined',
+            size: 'small',
+            required: true,
+            sx: {
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '8px',
+              }
+            }
+          }
+        }}
+      />
+    </Box>
+  </DialogContent>
+  <DialogActions sx={{ padding: '16px 24px' }}>
+    <Button 
+      onClick={() => setAddDialogOpen(false)} 
+      variant="outlined"
+      sx={{
+        borderRadius: '8px',
+        textTransform: 'none',
+        padding: '8px 16px',
+        minWidth: '100px'
+      }}
+    >
+      Cancel
+    </Button>
+    <Button 
+      onClick={handleAddExpense} 
+      color="primary" 
+      variant="contained"
+      disabled={isAdding || membersLoading || !newExpense.description || !newExpense.amount || !newExpense.memberId}
+      sx={{
+        borderRadius: '8px',
+        textTransform: 'none',
+        padding: '8px 16px',
+        minWidth: '100px',
+        boxShadow: 'none',
+        '&:hover': {
+          boxShadow: 'none'
+        }
+      }}
+    >
+      {isAdding ? <CircularProgress size={24} /> : 'Add Expense'}
+    </Button>
+  </DialogActions>
+</Dialog>
 
         {/* Edit Expense Dialog */}
         {currentExpense && (
