@@ -11,6 +11,11 @@ import {
   IconButton,
   CircularProgress,
   Snackbar,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Alert,
   styled
 } from '@mui/material';
 import { 
@@ -22,6 +27,7 @@ import {
   Close as CloseIcon
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
+import { requestPasswordReset } from '../api/auth';
 
 const StyledContainer = styled('div')(({ theme }) => ({
   minHeight: '100vh',
@@ -112,6 +118,14 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
+  const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false);
+  const [forgotPasswordMessage, setForgotPasswordMessage] = useState({ 
+    text: '', 
+    severity: 'info' 
+  });
+
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -122,34 +136,89 @@ const LoginPage = () => {
     
     const formData = new FormData(event.target);
     const credentials = {
-      username: formData.get('username').trim(),
+      email: formData.get('email').trim(),
       password: formData.get('password'),
     };
   
-    // Client-side validation
-    if (!credentials.username || !credentials.password) {
+    // Enhanced password validation
+    if (!credentials.email || !credentials.password) {
       setError('Please fill in all fields');
+      setLoading(false);
+      return;
+    }
+
+    if (credentials.password.length < 8) {
+      setError('Password must be at least 8 characters');
       setLoading(false);
       return;
     }
   
     try {
-      const success = await login(credentials.username, credentials.password);
-      if (!success) {
-        throw new Error('Invalid credentials');
-      }
+      await login(credentials.email, credentials.password);
       navigate('/');  
     } catch (err) {
       console.error('Login Error:', err);
-      setError(err.response?.data?.message || 'Invalid username or password');
+      setError(err.response?.data?.message || 'Invalid email or password');
       setSnackbarOpen(true);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleForgotPassword = async () => {
+    if (!forgotPasswordEmail) {
+      setForgotPasswordMessage({ 
+        text: 'Please enter your email', 
+        severity: 'error' 
+      });
+      return;
+    }
+    
+    setForgotPasswordLoading(true);
+    try {
+      const { success, error } = await requestPasswordReset(forgotPasswordEmail);
+      
+      if (success) {
+        // Store email in sessionStorage for reset password page
+        sessionStorage.setItem('resetEmail', forgotPasswordEmail);
+        
+        setForgotPasswordMessage({ 
+          text: 'Password reset instructions sent to your email', 
+          severity: 'success' 
+        });
+        
+        // Close dialog after 1.5 seconds and navigate to reset page
+        setTimeout(() => {
+          setForgotPasswordOpen(false);
+          navigate('/reset-password', { 
+            state: { email: forgotPasswordEmail },
+            replace: true 
+          });
+        }, 1500);
+      } else {
+        setForgotPasswordMessage({ 
+          text: error || 'Failed to send reset instructions', 
+          severity: 'error' 
+        });
+      }
+    } catch (err) {
+      setForgotPasswordMessage({ 
+        text: err.message || 'Failed to send reset instructions', 
+        severity: 'error' 
+      });
+    } finally {
+      setForgotPasswordLoading(false);
+    }
+  };
+
   const handleCloseSnackbar = () => {
     setSnackbarOpen(false);
+  };
+
+  const handleCloseForgotPassword = () => {
+    setForgotPasswordOpen(false);
+    setForgotPasswordEmail('');
+    setForgotPasswordMessage({ text: '', severity: 'info' });
   };
 
   return (
@@ -166,8 +235,9 @@ const LoginPage = () => {
 
         <StyledForm onSubmit={handleSubmit} noValidate>
           <StyledInput
-            name="username"
-            label="Username"
+            name="email"
+            label="Email"
+            type="email"
             variant="outlined"
             fullWidth
             required
@@ -235,6 +305,22 @@ const LoginPage = () => {
           </Box>
         </StyledForm>
 
+        <Box sx={{ textAlign: 'right', mt: 1 }}>
+          <Button 
+            onClick={() => setForgotPasswordOpen(true)}
+            sx={{ 
+              textTransform: 'none',
+              color: '#764ba2',
+              '&:hover': {
+                textDecoration: 'underline',
+                backgroundColor: 'transparent'
+              }
+            }}
+          >
+            Forgot password?
+          </Button>
+        </Box>
+
         <Divider sx={{ margin: '16px 0' }} />
 
         <StyledFooter>
@@ -247,10 +333,75 @@ const LoginPage = () => {
         </StyledFooter>
       </StyledCard>
 
+      <Dialog 
+        open={forgotPasswordOpen} 
+        onClose={handleCloseForgotPassword}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle sx={{ textAlign: 'center' }}>Reset Password</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" sx={{ mb: 2, textAlign: 'center' }}>
+            Enter your email to receive reset instructions
+          </Typography>
+          
+          <TextField
+            fullWidth
+            label="Email"
+            variant="outlined"
+            value={forgotPasswordEmail}
+            onChange={(e) => setForgotPasswordEmail(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <EmailIcon color="action" />
+                </InputAdornment>
+              ),
+            }}
+            sx={{ mb: 2 }}
+          />
+          
+          {forgotPasswordMessage.text && (
+            <Alert 
+              severity={forgotPasswordMessage.severity}
+              sx={{ mb: 2 }}
+            >
+              {forgotPasswordMessage.text}
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ justifyContent: 'center', pb: 3 }}>
+          <Button 
+            onClick={handleCloseForgotPassword}
+            sx={{ mr: 2 }}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleForgotPassword}
+            disabled={forgotPasswordLoading}
+            variant="contained"
+            sx={{
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              '&:hover': {
+                boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
+              }
+            }}
+          >
+            {forgotPasswordLoading ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : (
+              'Send Instructions'
+            )}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
+        onClose={() => setSnackbarOpen(false)}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
         <StyledErrorSnackbar>

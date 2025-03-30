@@ -1,12 +1,12 @@
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
-const API_URL = 'https://excellent-rosy-personalanand-185652cc.koyeb.app';
+const API_URL = 'http://localhost:8080';
 
-export const login = async (username, password) => {
+export const login = async (email, password) => {  
   try {
     const response = await axios.post(`${API_URL}/auth/login`, { 
-      username, 
+      email,  
       password 
     });
     
@@ -14,7 +14,7 @@ export const login = async (username, password) => {
       localStorage.setItem('token', response.data.token);
       const decoded = jwtDecode(response.data.token);
       return {
-        username: decoded.sub,
+        email: decoded.sub,  
         roles: decoded.roles,
         isAdmin: decoded.roles.includes('ROLE_ADMIN'),
         token: response.data.token
@@ -83,7 +83,7 @@ export const getCurrentUser = () => {
   
   const decoded = jwtDecode(token);
   return {
-    username: decoded.sub,
+    email: decoded.sub,  
     roles: decoded.roles,
     isAdmin: decoded.roles.includes('ROLE_ADMIN')
   };
@@ -98,5 +98,43 @@ export const getMembers = async () => {
   } catch (error) {
     console.error('Failed to fetch members:', error);
     throw error;
+  }
+};
+
+export const requestPasswordReset = async (email) => {
+  try {
+    const response = await axios.post(`${API_URL}/auth/forgot-password`, { 
+      email 
+    });
+    return {
+      success: true,
+      data: response.data
+    };
+  } catch (error) {
+    console.error('Password reset request error:', error.response?.data || error.message);
+    return {
+      success: false,
+      error: error.response?.data?.message || 'Failed to request password reset'
+    };
+  }
+};
+
+export const resetPassword = async (email, otp, newPassword) => {
+  try {
+    const response = await axios.post(`${API_URL}/auth/reset-password`, {
+      email,
+      otp,
+      newPassword
+    });
+    return {
+      success: true,
+      data: response.data
+    };
+  } catch (error) {
+    console.error('Password reset error:', error.response?.data || error.message);
+    return {
+      success: false,
+      error: error.response?.data?.message || 'Failed to reset password'
+    };
   }
 };

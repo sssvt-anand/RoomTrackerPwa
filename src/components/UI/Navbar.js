@@ -21,8 +21,6 @@ import {
   Receipt as ExpensesIcon,
   People as MembersIcon,
   Assessment as ReportsIcon,
-  ImportExport as ExportsIcon,
-  Inventory as ItemsIcon,
   ExitToApp as LogoutIcon,
   AccountCircle as LoginIcon,
   HowToReg as RegisterIcon
@@ -64,8 +62,8 @@ const Navbar = () => {
       display: 'flex', 
       flexDirection: 'column', 
       height: '100%', 
-      backgroundColor: isMobile ? '#ffffff' : '#0d1b2a',
-      color: isMobile ? '#000000' : '#ffffff',
+      backgroundColor: isMobile ? '#ffffff' : '#0d1b2a', // White background for mobile
+      color: isMobile ? '#000000' : '#ffffff', // Black text for mobile
       pt: { xs: '64px', sm: 0 }
     }}>
       {/* Collapse/Expand Button */}
@@ -99,18 +97,6 @@ const Navbar = () => {
                 <MembersIcon />
               </ListItemIcon>
               {!collapsed && <ListItemText primary="Members" sx={{ color: isMobile ? '#000000' : 'inherit' }} />}
-            </ListItem>
-            <ListItem button component={Link} to="/exports" sx={getMenuItemStyle('/exports')}>
-              <ListItemIcon sx={{ color: isMobile ? '#000000' : 'inherit', minWidth: collapsed ? '40px' : '56px' }}>
-                <ExportsIcon />
-              </ListItemIcon>
-              {!collapsed && <ListItemText primary="Exports" sx={{ color: isMobile ? '#000000' : 'inherit' }} />}
-            </ListItem>
-            <ListItem button component={Link} to="/items" sx={getMenuItemStyle('/items')}>
-              <ListItemIcon sx={{ color: isMobile ? '#000000' : 'inherit', minWidth: collapsed ? '40px' : '56px' }}>
-                <ItemsIcon />
-              </ListItemIcon>
-              {!collapsed && <ListItemText primary="Items" sx={{ color: isMobile ? '#000000' : 'inherit' }} />}
             </ListItem>
             <ListItem button component={Link} to="/reports" sx={getMenuItemStyle('/reports')}>
               <ListItemIcon sx={{ color: isMobile ? '#000000' : 'inherit', minWidth: collapsed ? '40px' : '56px' }}>
@@ -156,7 +142,7 @@ const Navbar = () => {
             position: 'fixed',
             top: 16,
             left: 16,
-            color: '#000000',
+            color: '#000000', // Changed to black
             zIndex: theme.zIndex.drawer + 2,
           }} 
           onClick={handleDrawerToggle}
@@ -183,8 +169,8 @@ const Navbar = () => {
             display: { xs: 'block', sm: 'none' },
             '& .MuiDrawer-paper': { 
               width: drawerWidth,
-              backgroundColor: '#ffffff',
-              color: '#000000',
+              backgroundColor: '#ffffff', // White background for mobile
+              color: '#000000', // Black text for mobile
               boxSizing: 'border-box',
               zIndex: theme.zIndex.drawer + 1,
             },
@@ -193,7 +179,7 @@ const Navbar = () => {
           {drawerContent(false)}
         </Drawer>
 
-        {/* Desktop Drawer */}
+        {/* Desktop Drawer (unchanged) */}
         <Drawer
           variant="permanent"
           sx={{

@@ -6,26 +6,33 @@ import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/UI/Navbar';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import Dashboard from './pages/Dashboard';
 import ExpensesPage from './pages/ExpensesPage';
 import MembersPage from './pages/MembersPage';
 import ReportsPage from './pages/ReportsPage';
 import ProtectedRoute from './components/UI/ProtectedRoute';
 import EditExpense from './components/Expenses/EditExpense';
-
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import './App.css';
 
 function App() {
   return (
-    <LocalizationProvider  dateAdapter={AdapterDateFns}>
+    <LocalizationProvider dateAdapter={AdapterDateFns}>
       <AuthProvider>
         <Router>
           <div className="App">
             <Navbar />
             <div className="content">
               <Routes>
+                {/* Public Routes */}
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
+                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
+                
+
+                {/* Protected Routes */}
                 <Route
                   path="/"
                   element={
@@ -42,7 +49,6 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
-                
                 <Route
                   path="/members"
                   element={
@@ -51,7 +57,6 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
-    
                 <Route
                   path="/reports"
                   element={
@@ -61,13 +66,16 @@ function App() {
                   }
                 />    
                 <Route 
-                path="/expenses/edit/:id" 
-                element={
-                  <ProtectedRoute>
-                    <EditExpense />
-                  </ProtectedRoute>
-                } 
-              />          
+                  path="/expenses/edit/:id" 
+                  element={
+                    <ProtectedRoute>
+                      <EditExpense />
+                    </ProtectedRoute>
+                  } 
+                />
+                
+                {/* Fallback route - can be a 404 page */}
+                <Route path="*" element={<LoginPage />} />
               </Routes>
             </div>
           </div>
