@@ -1,29 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Container,
+  Box,
   Typography,
   Grid,
-  Paper,
+  Card,
+  CardContent,
+  Button,
+  Divider,
   Table,
   TableHead,
   TableBody,
   TableRow,
   TableCell,
-  Divider,
   CircularProgress,
   Snackbar,
   TablePagination,
   useMediaQuery,
   useTheme,
-  Card,
-  CardContent
+  Paper
 } from '@mui/material';
 import Alert from '@mui/material/Alert';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { getAllExpenses } from '../api/expenses';
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [allExpenses, setAllExpenses] = useState([]);
   const [paginatedExpenses, setPaginatedExpenses] = useState([]);
   const [memberBalances, setMemberBalances] = useState([]);
@@ -38,7 +41,6 @@ const Dashboard = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  // Define showSnackbar function
   const showSnackbar = (message, severity = 'error') => {
     setSnackbarMessage(message);
     setSnackbarSeverity(severity);
@@ -50,12 +52,8 @@ const Dashboard = () => {
     setError(null);
 
     try {
-      // Fetch all expenses
       const allExpenses = await getAllExpenses();
-
-      // Store in localStorage for offline fallback
       localStorage.setItem('cachedExpenses', JSON.stringify(allExpenses));
-
       setAllExpenses(allExpenses);
       updatePaginatedExpenses(allExpenses, page, rowsPerPage);
       calculateSummary(allExpenses);
@@ -64,7 +62,6 @@ const Dashboard = () => {
       setError("Failed to load data. " + (navigator.onLine ? "Server error." : "You are offline."));
       setSnackbarOpen(true);
 
-      // Fallback to cached data if available
       const cachedExpenses = localStorage.getItem('cachedExpenses');
       if (cachedExpenses) {
         const parsedExpenses = JSON.parse(cachedExpenses);
@@ -85,7 +82,6 @@ const Dashboard = () => {
   };
 
   const calculateSummary = (expenses) => {
-    // Calculate totals
     const totalAmount = expenses.reduce(
       (sum, expense) => sum + parseFloat(expense.amount),
       0
@@ -103,7 +99,6 @@ const Dashboard = () => {
       count: expenses.length,
     });
 
-    // Calculate member balances
     const balances = {};
     expenses.forEach((expense) => {
       const memberName = expense.member.name;
@@ -159,77 +154,88 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <Container maxWidth="lg" style={{ padding: '24px', textAlign: 'center' }}>
+      <Box sx={{ p: 3, textAlign: 'center' }}>
         <CircularProgress />
         <Typography variant="body1">Loading data...</Typography>
-      </Container>
+      </Box>
     );
   }
 
   return (
-    <Container maxWidth="lg" style={{ padding: isMobile ? '16px' : '24px' }}>
-      <Typography variant="h4" gutterBottom style={{ marginBottom: '24px' }}>
-        Dashboard Overview
+    <Box sx={{ p: 3 }}>
+      {/* Expenses Header Section - Matches your image layout */}
+      <Typography variant="h4" component="h1" gutterBottom>
+        Expenses
       </Typography>
-
-      {/* Summary Cards */}
-      <Grid container spacing={3} style={{ marginBottom: '24px' }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card style={{ height: '100%' }}>
+      
+      {/* Summary Cards - Simplified to match your image */}
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        <Grid item xs={12} md={4}>
+          <Card>
             <CardContent>
-              <Typography variant="h6" gutterBottom style={{ color: '#555' }}>
+              <Typography variant="h6" color="text.secondary" gutterBottom>
                 Total Expenses
               </Typography>
-              <Typography variant="h4" style={{ fontWeight: 600 }}>
+              <Typography variant="h4">
                 {formatCurrency(summary.total)}
               </Typography>
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card style={{ height: '100%' }}>
+        <Grid item xs={12} md={4}>
+          <Card>
             <CardContent>
-              <Typography variant="h6" gutterBottom style={{ color: '#555' }}>
+              <Typography variant="h6" color="text.secondary" gutterBottom>
                 Total Cleared
               </Typography>
-              <Typography variant="h4" style={{ fontWeight: 600, color: '#2e7d32' }}>
+              <Typography variant="h4" color="success.main">
                 {formatCurrency(summary.totalCleared)}
               </Typography>
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card style={{ height: '100%' }}>
+        <Grid item xs={12} md={4}>
+          <Card>
             <CardContent>
-              <Typography variant="h6" gutterBottom style={{ color: '#555' }}>
-                Total Remaining
+              <Typography variant="h6" color="text.secondary" gutterBottom>
+                Remaining
               </Typography>
-              <Typography variant="h4" style={{ fontWeight: 600, color: '#d32f2f' }}>
+              <Typography variant="h4" color="error.main">
                 {formatCurrency(summary.totalRemaining)}
               </Typography>
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card style={{ height: '100%' }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom style={{ color: '#555' }}>
-                Total Transactions
-              </Typography>
-              <Typography variant="h4" style={{ fontWeight: 600 }}>
-                {summary.count}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
       </Grid>
+      
+      {/* Action Section - Matches your image */}
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        mb: 3,
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? 2 : 0
+      }}>
+        <Typography variant="h6" component="div">
+          VIEW REPORTS
+        </Typography>
+        <Button 
+          variant="contained" 
+          color="primary"
+          onClick={() => navigate('/expenses/add')}
+          sx={{ minWidth: 150 }}
+        >
+          ADD EXPENSE
+        </Button>
+      </Box>
 
-      {/* Recent Expenses */}
-      <Divider style={{ margin: '24px 0' }} />
-      <Typography variant="h5" gutterBottom style={{ marginBottom: '16px' }}>
+      {/* Recent Expenses Table */}
+      <Divider sx={{ my: 3 }} />
+      <Typography variant="h5" gutterBottom>
         Recent Expenses
       </Typography>
-      <Paper style={{ marginBottom: '32px', overflowX: 'auto' }}>
+      <Paper sx={{ mb: 3, overflowX: 'auto' }}>
         <Table>
           <TableHead>
             <TableRow>
@@ -262,12 +268,12 @@ const Dashboard = () => {
         />
       </Paper>
 
-      {/* Member Balances */}
-      <Divider style={{ margin: '24px 0' }} />
-      <Typography variant="h5" gutterBottom style={{ marginBottom: '16px' }}>
+      {/* Member Balances Table */}
+      <Divider sx={{ my: 3 }} />
+      <Typography variant="h5" gutterBottom>
         Member Balances
       </Typography>
-      <Paper style={{ marginBottom: '32px', overflowX: 'auto' }}>
+      <Paper sx={{ mb: 3, overflowX: 'auto' }}>
         <Table>
           <TableHead>
             <TableRow>
@@ -283,9 +289,10 @@ const Dashboard = () => {
                 <TableCell>{member.member}</TableCell>
                 <TableCell align="right">{formatCurrency(member.total)}</TableCell>
                 <TableCell align="right">{formatCurrency(member.cleared)}</TableCell>
-                <TableCell align="right" style={{ 
-                  color: member.remaining > 0 ? '#d32f2f' : '#2e7d32' 
-                }}>
+                <TableCell 
+                  align="right" 
+                  sx={{ color: member.remaining > 0 ? 'error.main' : 'success.main' }}
+                >
                   {formatCurrency(member.remaining)}
                 </TableCell>
               </TableRow>
@@ -310,7 +317,7 @@ const Dashboard = () => {
           {snackbarMessage}
         </Alert>
       </Snackbar>
-    </Container>
+    </Box>
   );
 };
 
