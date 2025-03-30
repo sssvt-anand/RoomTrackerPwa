@@ -38,6 +38,7 @@ const Dashboard = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
+  // Define showSnackbar function
   const showSnackbar = (message, severity = 'error') => {
     setSnackbarMessage(message);
     setSnackbarSeverity(severity);
@@ -49,7 +50,10 @@ const Dashboard = () => {
     setError(null);
 
     try {
+      // Fetch all expenses
       const allExpenses = await getAllExpenses();
+
+      // Store in localStorage for offline fallback
       localStorage.setItem('cachedExpenses', JSON.stringify(allExpenses));
 
       setAllExpenses(allExpenses);
@@ -60,6 +64,7 @@ const Dashboard = () => {
       setError("Failed to load data. " + (navigator.onLine ? "Server error." : "You are offline."));
       setSnackbarOpen(true);
 
+      // Fallback to cached data if available
       const cachedExpenses = localStorage.getItem('cachedExpenses');
       if (cachedExpenses) {
         const parsedExpenses = JSON.parse(cachedExpenses);
@@ -80,6 +85,7 @@ const Dashboard = () => {
   };
 
   const calculateSummary = (expenses) => {
+    // Calculate totals
     const totalAmount = expenses.reduce(
       (sum, expense) => sum + parseFloat(expense.amount),
       0
@@ -97,6 +103,7 @@ const Dashboard = () => {
       count: expenses.length,
     });
 
+    // Calculate member balances
     const balances = {};
     expenses.forEach((expense) => {
       const memberName = expense.member.name;
@@ -152,7 +159,7 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ padding: '24px', textAlign: 'center' }}>
+      <Container maxWidth="lg" style={{ padding: '24px', textAlign: 'center' }}>
         <CircularProgress />
         <Typography variant="body1">Loading data...</Typography>
       </Container>
@@ -160,56 +167,56 @@ const Dashboard = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ padding: isMobile ? '16px' : '24px' }}>
-      <Typography variant="h4" gutterBottom sx={{ marginBottom: '24px' }}>
+    <Container maxWidth="lg" style={{ padding: isMobile ? '16px' : '24px' }}>
+      <Typography variant="h4" gutterBottom style={{ marginBottom: '24px' }}>
         Dashboard Overview
       </Typography>
 
       {/* Summary Cards */}
-      <Grid container spacing={3} sx={{ marginBottom: '24px' }}>
+      <Grid container spacing={3} style={{ marginBottom: '24px' }}>
         <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ height: '100%' }}>
+          <Card style={{ height: '100%' }}>
             <CardContent>
-              <Typography variant="h6" gutterBottom sx={{ color: '#555' }}>
+              <Typography variant="h6" gutterBottom style={{ color: '#555' }}>
                 Total Expenses
               </Typography>
-              <Typography variant="h4" sx={{ fontWeight: 600 }}>
+              <Typography variant="h4" style={{ fontWeight: 600 }}>
                 {formatCurrency(summary.total)}
               </Typography>
             </CardContent>
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ height: '100%' }}>
+          <Card style={{ height: '100%' }}>
             <CardContent>
-              <Typography variant="h6" gutterBottom sx={{ color: '#555' }}>
+              <Typography variant="h6" gutterBottom style={{ color: '#555' }}>
                 Total Cleared
               </Typography>
-              <Typography variant="h4" sx={{ fontWeight: 600, color: 'success.main' }}>
+              <Typography variant="h4" style={{ fontWeight: 600, color: '#2e7d32' }}>
                 {formatCurrency(summary.totalCleared)}
               </Typography>
             </CardContent>
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ height: '100%' }}>
+          <Card style={{ height: '100%' }}>
             <CardContent>
-              <Typography variant="h6" gutterBottom sx={{ color: '#555' }}>
+              <Typography variant="h6" gutterBottom style={{ color: '#555' }}>
                 Total Remaining
               </Typography>
-              <Typography variant="h4" sx={{ fontWeight: 600, color: 'error.main' }}>
+              <Typography variant="h4" style={{ fontWeight: 600, color: '#d32f2f' }}>
                 {formatCurrency(summary.totalRemaining)}
               </Typography>
             </CardContent>
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ height: '100%' }}>
+          <Card style={{ height: '100%' }}>
             <CardContent>
-              <Typography variant="h6" gutterBottom sx={{ color: '#555' }}>
+              <Typography variant="h6" gutterBottom style={{ color: '#555' }}>
                 Total Transactions
               </Typography>
-              <Typography variant="h4" sx={{ fontWeight: 600 }}>
+              <Typography variant="h4" style={{ fontWeight: 600 }}>
                 {summary.count}
               </Typography>
             </CardContent>
@@ -218,11 +225,11 @@ const Dashboard = () => {
       </Grid>
 
       {/* Recent Expenses */}
-      <Divider sx={{ margin: '24px 0' }} />
-      <Typography variant="h5" gutterBottom sx={{ marginBottom: '16px' }}>
+      <Divider style={{ margin: '24px 0' }} />
+      <Typography variant="h5" gutterBottom style={{ marginBottom: '16px' }}>
         Recent Expenses
       </Typography>
-      <Paper sx={{ marginBottom: '32px', overflowX: 'auto' }}>
+      <Paper style={{ marginBottom: '32px', overflowX: 'auto' }}>
         <Table>
           <TableHead>
             <TableRow>
@@ -256,11 +263,11 @@ const Dashboard = () => {
       </Paper>
 
       {/* Member Balances */}
-      <Divider sx={{ margin: '24px 0' }} />
-      <Typography variant="h5" gutterBottom sx={{ marginBottom: '16px' }}>
+      <Divider style={{ margin: '24px 0' }} />
+      <Typography variant="h5" gutterBottom style={{ marginBottom: '16px' }}>
         Member Balances
       </Typography>
-      <Paper sx={{ marginBottom: '32px', overflowX: 'auto' }}>
+      <Paper style={{ marginBottom: '32px', overflowX: 'auto' }}>
         <Table>
           <TableHead>
             <TableRow>
@@ -276,8 +283,8 @@ const Dashboard = () => {
                 <TableCell>{member.member}</TableCell>
                 <TableCell align="right">{formatCurrency(member.total)}</TableCell>
                 <TableCell align="right">{formatCurrency(member.cleared)}</TableCell>
-                <TableCell align="right" sx={{ 
-                  color: member.remaining > 0 ? 'error.main' : 'success.main' 
+                <TableCell align="right" style={{ 
+                  color: member.remaining > 0 ? '#d32f2f' : '#2e7d32' 
                 }}>
                   {formatCurrency(member.remaining)}
                 </TableCell>
@@ -297,8 +304,8 @@ const Dashboard = () => {
         <Alert 
           onClose={() => setSnackbarOpen(false)} 
           severity={snackbarSeverity}
+          elevation={6}
           variant="filled"
-          sx={{ width: '100%' }}
         >
           {snackbarMessage}
         </Alert>
