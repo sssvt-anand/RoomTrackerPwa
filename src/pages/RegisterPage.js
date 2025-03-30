@@ -8,90 +8,100 @@ import {
   Button,
   Divider,
   InputAdornment,
-  IconButton
-} from '@material-ui/core';
+  IconButton,
+  styled
+} from '@mui/material';
 import { 
   Person as PersonIcon,
   Email as EmailIcon,
   Lock as LockIcon,
   Visibility,
   VisibilityOff
-} from '@material-ui/icons';
+} from '@mui/icons-material';
 import { register } from '../api/auth';
-import { makeStyles } from '@material-ui/core/styles';
 
-const useStyles = makeStyles((theme) => ({
-  container: {
-    minHeight: '100vh',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-    padding: theme.spacing(3),
-  },
-  card: {
-    width: '100%',
-    maxWidth: 400,
-    borderRadius: 15,
-    boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-    border: 'none',
-    padding: theme.spacing(4),
-  },
-  header: {
-    textAlign: 'center',
-    marginBottom: theme.spacing(4),
-  },
-  title: {
-    color: '#2c3e50',
-    fontWeight: 600,
-    marginBottom: theme.spacing(1),
-  },
-  subtitle: {
-    color: '#7f8c8d',
-    margin: 0,
-  },
-  error: {
-    color: theme.palette.error.main,
-    textAlign: 'center',
-    marginBottom: theme.spacing(3),
-  },
-  form: {
-    width: '100%',
-    marginTop: theme.spacing(2),
-  },
-  input: {
+const Container = styled('div')(({ theme }) => ({
+  minHeight: '100vh',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+  padding: theme.spacing(3),
+}));
+
+const StyledCard = styled(Card)(({ theme }) => ({
+  width: '100%',
+  maxWidth: 400,
+  borderRadius: 15,
+  boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+  border: 'none',
+  padding: theme.spacing(4),
+}));
+
+const Header = styled('div')(({ theme }) => ({
+  textAlign: 'center',
+  marginBottom: theme.spacing(4),
+}));
+
+const Title = styled(Typography)({
+  color: '#2c3e50',
+  fontWeight: 600,
+  marginBottom: 1,
+});
+
+const Subtitle = styled(Typography)({
+  color: '#7f8c8d',
+  margin: 0,
+});
+
+const ErrorText = styled(Typography)(({ theme }) => ({
+  color: theme.palette.error.main,
+  textAlign: 'center',
+  marginBottom: theme.spacing(3),
+}));
+
+const Form = styled('form')(({ theme }) => ({
+  width: '100%',
+  marginTop: theme.spacing(2),
+}));
+
+const StyledTextField = styled(TextField)(({ theme }) => ({
+  borderRadius: 8,
+  marginBottom: theme.spacing(2),
+  '& .MuiOutlinedInput-root': {
     borderRadius: 8,
-    marginBottom: theme.spacing(2),
-  },
-  button: {
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    color: theme.palette.common.white,
-    borderRadius: 8,
-    fontWeight: 600,
-    padding: theme.spacing(1.5),
-    marginTop: theme.spacing(2),
-    marginBottom: theme.spacing(2),
-    '&:hover': {
-      boxShadow: theme.shadows[3],
-    },
-  },
-  footer: {
-    textAlign: 'center',
-    marginTop: theme.spacing(2),
-    color: '#7f8c8d',
-  },
-  link: {
-    color: '#764ba2',
-    fontWeight: 600,
-    textDecoration: 'none',
-    '&:hover': {
-      textDecoration: 'underline',
-    },
   },
 }));
 
+const StyledButton = styled(Button)(({ theme }) => ({
+  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+  color: theme.palette.common.white,
+  borderRadius: 8,
+  fontWeight: 600,
+  padding: theme.spacing(1.5),
+  marginTop: theme.spacing(2),
+  marginBottom: theme.spacing(2),
+  '&:hover': {
+    boxShadow: theme.shadows[3],
+  },
+}));
+
+const Footer = styled('div')(({ theme }) => ({
+  textAlign: 'center',
+  marginTop: theme.spacing(2),
+  color: '#7f8c8d',
+}));
+
+const StyledLink = styled(Link)({
+  color: '#764ba2',
+  fontWeight: 600,
+  textDecoration: 'none',
+  '&:hover': {
+    textDecoration: 'underline',
+  },
+});
+
 const RegisterPage = () => {
-  const classes = useStyles();
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
@@ -114,71 +124,66 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className={classes.container}>
-      <Card className={classes.card}>
-        <div className={classes.header}>
-          <Typography variant="h4" className={classes.title}>
+    <Container>
+      <StyledCard>
+        <Header>
+          <Title variant="h4">
             Create Account
-          </Typography>
-          <Typography variant="subtitle1" className={classes.subtitle}>
+          </Title>
+          <Subtitle variant="subtitle1">
             Join us to get started
-          </Typography>
-        </div>
+          </Subtitle>
+        </Header>
 
         {error && (
-          <Typography variant="body2" className={classes.error}>
+          <ErrorText variant="body2">
             {error}
-          </Typography>
+          </ErrorText>
         )}
 
-        <form className={classes.form} onSubmit={handleSubmit}>
-          <TextField
+        <Form onSubmit={handleSubmit}>
+          <StyledTextField
             name="name"
             label="Full Name"
             variant="outlined"
             fullWidth
             required
-            className={classes.input}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <PersonIcon style={{ color: '#7f8c8d' }} />
+                  <PersonIcon sx={{ color: '#7f8c8d' }} />
                 </InputAdornment>
               ),
-              style: { borderRadius: 8 },
             }}
           />
 
-          <TextField
+          <StyledTextField
             name="email"
             label="Email"
             type="email"
             variant="outlined"
             fullWidth
             required
-            className={classes.input}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <EmailIcon style={{ color: '#7f8c8d' }} />
+                  <EmailIcon sx={{ color: '#7f8c8d' }} />
                 </InputAdornment>
               ),
-              style: { borderRadius: 8 },
             }}
           />
 
-          <TextField
+          <StyledTextField
             name="password"
             label="Password"
             type={showPassword ? 'text' : 'password'}
             variant="outlined"
             fullWidth
             required
-            className={classes.input}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <LockIcon style={{ color: '#7f8c8d' }} />
+                  <LockIcon sx={{ color: '#7f8c8d' }} />
                 </InputAdornment>
               ),
               endAdornment: (
@@ -192,33 +197,31 @@ const RegisterPage = () => {
                   </IconButton>
                 </InputAdornment>
               ),
-              style: { borderRadius: 8 },
             }}
           />
 
-          <Button
+          <StyledButton
             type="submit"
             fullWidth
             variant="contained"
             size="large"
-            className={classes.button}
           >
             Register
-          </Button>
-        </form>
+          </StyledButton>
+        </Form>
 
-        <Divider style={{ margin: '16px 0' }} />
+        <Divider sx={{ margin: '16px 0' }} />
 
-        <div className={classes.footer}>
+        <Footer>
           <Typography variant="body1">
             Already have an account?{' '}
-            <Link to="/login" className={classes.link}>
+            <StyledLink to="/login">
               Login here
-            </Link>
+            </StyledLink>
           </Typography>
-        </div>
-      </Card>
-    </div>
+        </Footer>
+      </StyledCard>
+    </Container>
   );
 };
 

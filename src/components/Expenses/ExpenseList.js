@@ -31,8 +31,9 @@ import {
   Collapse,
   Avatar,
   Snackbar,
-} from '@material-ui/core';
-import { Alert } from '@material-ui/lab';
+  styled
+} from '@mui/material';
+import Alert from '@mui/material/Alert';
 import {
   MoreVert as MoreIcon,
   Delete as DeleteIcon,
@@ -40,87 +41,84 @@ import {
   Check as ClearIcon,
   History as HistoryIcon,
   ExpandMore as ExpandMoreIcon,
-  ExpandLess as ExpandLessIcon,
-} from '@material-ui/icons';
-import { makeStyles } from '@material-ui/core/styles';
+  ExpandLess as ExpandLessIcon
+} from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 import { getPaymentHistory } from '../../api/expenses';
 
+const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
+  marginTop: theme.spacing(3),
+  borderRadius: theme.shape.borderRadius,
+  boxShadow: theme.shadows[1],
+}));
 
-const useStyles = makeStyles((theme) => ({
-  tableContainer: {
-    marginTop: theme.spacing(3),
-    borderRadius: theme.shape.borderRadius,
-    boxShadow: theme.shadows[1],
+const StyledTableHead = styled(TableHead)(({ theme }) => ({
+  backgroundColor: theme.palette.primary.main,
+}));
+
+const StyledHeaderCell = styled(TableCell)(({ theme }) => ({
+  color: theme.palette.common.white,
+  fontWeight: 'bold',
+}));
+
+const StyledTableRow = styled(TableRow)(({ theme }) => ({
+  '&:nth-of-type(odd)': {
+    backgroundColor: theme.palette.action.hover,
   },
-  table: {
-    minWidth: 650,
-  },
-  tableHeader: {
-    backgroundColor: theme.palette.primary.main,
-  },
-  headerCell: {
-    color: theme.palette.common.white,
-    fontWeight: 'bold',
-  },
-  row: {
-    '&:nth-of-type(odd)': {
-      backgroundColor: theme.palette.action.hover,
-    },
-  },
-  cell: {
-    padding: theme.spacing(2),
-  },
-  statusCleared: {
-    backgroundColor: '#4caf50',
-    color: 'white',
-  },
-  statusPending: {
-    backgroundColor: '#ff9800',
-    color: 'white',
-  },
-  statusPartial: {
-    backgroundColor: '#2196f3',
-    color: 'white',
-  },
-  loadingContainer: {
-    display: 'flex',
-    justifyContent: 'center',
-    padding: theme.spacing(4),
-  },
-  statusText: {
-    marginTop: theme.spacing(0.5),
-    lineHeight: 1.3,
-  },
-  actionCell: {
-    width: 150,
-  },
-  menuButton: {
-    padding: theme.spacing(1),
-  },
-  dialogContent: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: theme.spacing(2),
-  },
-  paymentHistoryItem: {
-    paddingLeft: theme.spacing(4),
-  },
-  expandButton: {
-    marginLeft: 'auto',
-  },
-  nestedList: {
-    paddingLeft: theme.spacing(4),
-  },
-  avatar: {
-    width: theme.spacing(4),
-    height: theme.spacing(4),
-    marginRight: theme.spacing(2),
-  },
-  paymentItem: {
-    display: 'flex',
-    alignItems: 'center',
-  },
+}));
+
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+  padding: theme.spacing(2),
+}));
+
+const StatusChip = styled(Chip)(({ theme, status }) => ({
+  backgroundColor: status === 'cleared' ? '#4caf50' : 
+                  status === 'pending' ? '#ff9800' : '#2196f3',
+  color: 'white',
+}));
+
+const LoadingContainer = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  justifyContent: 'center',
+  padding: theme.spacing(4),
+}));
+
+const StatusText = styled(Box)(({ theme }) => ({
+  marginTop: theme.spacing(0.5),
+  lineHeight: 1.3,
+}));
+
+const ActionCell = styled(TableCell)(({ theme }) => ({
+  width: 150,
+}));
+
+const MenuButton = styled(IconButton)(({ theme }) => ({
+  padding: theme.spacing(1),
+}));
+
+const DialogContentBox = styled(DialogContent)(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: theme.spacing(2),
+}));
+
+const PaymentHistoryItem = styled(ListItem)(({ theme }) => ({
+  paddingLeft: theme.spacing(4),
+}));
+
+const ExpandButton = styled(IconButton)(({ theme }) => ({
+  marginLeft: 'auto',
+}));
+
+const MemberAvatar = styled(Avatar)(({ theme }) => ({
+  width: theme.spacing(4),
+  height: theme.spacing(4),
+  marginRight: theme.spacing(2),
+}));
+
+const PaymentItem = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
 }));
 
 const ExpenseList = ({ 
@@ -131,7 +129,6 @@ const ExpenseList = ({
   onClearExpense = () => {},
   members = [] 
 }) => {
-  const classes = useStyles();
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
   
@@ -208,11 +205,11 @@ const ExpenseList = ({
     if (!expense) return null;
     
     if (expense.fullyCleared) {
-      return <Chip label="Fully Cleared" size="small" className={classes.statusCleared} />;
+      return <StatusChip label="Fully Cleared" size="small" status="cleared" />;
     } else if ((expense.clearedAmount || 0) > 0) {
-      return <Chip label="Partially Cleared" size="small" className={classes.statusPartial} />;
+      return <StatusChip label="Partially Cleared" size="small" status="partial" />;
     } else {
-      return <Chip label="Pending" size="small" className={classes.statusPending} />;
+      return <StatusChip label="Pending" size="small" status="pending" />;
     }
   };
 
@@ -225,7 +222,7 @@ const ExpenseList = ({
   
     if (expense.fullyCleared) {
       return (
-        <Box className={classes.statusText}>
+        <StatusText>
           <Typography variant="caption" display="block">
             Fully Cleared: {formatAmount(totalAmount)}
           </Typography>
@@ -234,11 +231,11 @@ const ExpenseList = ({
               By {expense.lastClearedBy.name || 'Unknown'} ({formatDate(expense.lastClearedAt)})
             </Typography>
           )}
-        </Box>
+        </StatusText>
       );
     } else if (clearedAmount > 0) {
       return (
-        <Box className={classes.statusText}>
+        <StatusText>
           <Typography variant="caption" display="block">
             Partially Cleared: {formatAmount(clearedAmount)}/{formatAmount(totalAmount)}
           </Typography>
@@ -250,7 +247,7 @@ const ExpenseList = ({
           <Typography variant="caption" display="block" color="error">
             Remaining: {formatAmount(remainingAmount)}
           </Typography>
-        </Box>
+        </StatusText>
       );
     } else {
       return (
@@ -421,15 +418,15 @@ const ExpenseList = ({
 
   if (loading && (!localExpenses || localExpenses.length === 0)) {
     return (
-      <Box className={classes.loadingContainer}>
+      <LoadingContainer>
         <CircularProgress />
-      </Box>
+      </LoadingContainer>
     );
   }
 
   if (!localExpenses || localExpenses.length === 0) {
     return (
-      <Typography variant="body1" align="center" style={{ padding: 20 }}>
+      <Typography variant="body1" align="center" sx={{ p: 2.5 }}>
         No expenses found.
       </Typography>
     );
@@ -437,66 +434,63 @@ const ExpenseList = ({
 
   return (
     <>
-      <TableContainer component={Paper} className={classes.tableContainer}>
-        <Table className={classes.table} aria-label="expenses table">
-          <TableHead className={classes.tableHeader}>
+      <StyledTableContainer component={Paper}>
+        <Table aria-label="expenses table">
+          <StyledTableHead>
             <TableRow>
-              <TableCell className={classes.headerCell}>Member</TableCell>
-              <TableCell className={classes.headerCell}>Description</TableCell>
-              <TableCell className={classes.headerCell}>Amount</TableCell>
-              <TableCell className={classes.headerCell}>Date</TableCell>
-              <TableCell className={classes.headerCell}>Status</TableCell>
-              <TableCell className={classes.headerCell}>Actions</TableCell>
+              <StyledHeaderCell>Member</StyledHeaderCell>
+              <StyledHeaderCell>Description</StyledHeaderCell>
+              <StyledHeaderCell>Amount</StyledHeaderCell>
+              <StyledHeaderCell>Date</StyledHeaderCell>
+              <StyledHeaderCell>Status</StyledHeaderCell>
+              <StyledHeaderCell>Actions</StyledHeaderCell>
             </TableRow>
-          </TableHead>
+          </StyledTableHead>
           <TableBody>
             {localExpenses.map((expense) => (
               expense && (
                 <React.Fragment key={expense.id || `expense-${Math.random()}`}>
-                  <TableRow className={classes.row}>
-                    <TableCell className={classes.cell}>
+                  <StyledTableRow>
+                    <StyledTableCell>
                       <Box display="flex" alignItems="center">
-                        <Avatar 
-                          className={classes.avatar}
+                        <MemberAvatar 
                           alt={expense.member?.name || 'Unknown'} 
                         >
                           {(expense.member?.name || 'U').charAt(0)}
-                        </Avatar>
+                        </MemberAvatar>
                         {expense.member?.name || 'Unknown'}
                       </Box>
-                    </TableCell>
-                    <TableCell className={classes.cell}>{expense.description || '-'}</TableCell>
-                    <TableCell className={classes.cell}>{formatAmount(expense.amount)}</TableCell>
-                    <TableCell className={classes.cell}>{formatDate(expense.date)}</TableCell>
-                    <TableCell className={classes.cell}>
+                    </StyledTableCell>
+                    <StyledTableCell>{expense.description || '-'}</StyledTableCell>
+                    <StyledTableCell>{formatAmount(expense.amount)}</StyledTableCell>
+                    <StyledTableCell>{formatDate(expense.date)}</StyledTableCell>
+                    <StyledTableCell>
                       <Box>
                         {getStatusChip(expense)}
                         {renderStatusDetails(expense)}
                       </Box>
-                    </TableCell>
-                    <TableCell className={classes.actionCell}>
+                    </StyledTableCell>
+                    <ActionCell>
                       <Box display="flex" alignItems="center">
-                        <IconButton
+                        <ExpandButton
                           onClick={() => toggleExpand(expense.id)}
-                          className={classes.expandButton}
                           disabled={!expense.id}
                         >
                           {expandedExpenses[expense.id] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                        </IconButton>
-                        <IconButton
+                        </ExpandButton>
+                        <MenuButton
                           aria-label="actions"
                           onClick={(e) => handleMenuOpen(e, expense)}
-                          className={classes.menuButton}
                         >
                           <MoreIcon />
-                        </IconButton>
+                        </MenuButton>
                       </Box>
-                    </TableCell>
-                  </TableRow>
+                    </ActionCell>
+                  </StyledTableRow>
                   <TableRow>
-                    <TableCell colSpan={6} style={{ padding: 0 }}>
+                    <TableCell colSpan={6} sx={{ p: 0 }}>
                       <Collapse in={expandedExpenses[expense.id]} timeout="auto" unmountOnExit>
-                        <Box margin={1}>
+                        <Box sx={{ m: 1 }}>
                           <Typography variant="h6" gutterBottom>
                             Payment History
                           </Typography>
@@ -504,20 +498,19 @@ const ExpenseList = ({
                             {(expense.paymentHistory || []).length > 0 ? (
                               (expense.paymentHistory || []).map((payment, index) => (
                                 <React.Fragment key={index}>
-                                  <ListItem className={classes.paymentHistoryItem}>
-                                    <Box className={classes.paymentItem}>
-                                      <Avatar 
-                                        className={classes.avatar}
+                                  <PaymentHistoryItem>
+                                    <PaymentItem>
+                                      <MemberAvatar 
                                         alt={payment.clearedBy?.name || 'Unknown'}
                                       >
                                         {(payment.clearedBy?.name || 'U').charAt(0)}
-                                      </Avatar>
+                                      </MemberAvatar>
                                       <ListItemText
                                         primary={`${formatAmount(payment.amount)} by ${payment.clearedBy?.name || 'Unknown'}`}
                                         secondary={formatDate(payment.clearedAt)}
                                       />
-                                    </Box>
-                                  </ListItem>
+                                    </PaymentItem>
+                                  </PaymentHistoryItem>
                                   {index < (expense.paymentHistory || []).length - 1 && <Divider />}
                                 </React.Fragment>
                               ))
@@ -536,61 +529,61 @@ const ExpenseList = ({
             ))}
           </TableBody>
         </Table>
-      </TableContainer>
+      </StyledTableContainer>
 
-      
       <Menu
-  anchorEl={anchorEl}
-  open={Boolean(anchorEl)}
-  onClose={handleMenuClose}
-  MenuListProps={{
-    'aria-labelledby': 'expense-actions-menu',
-  }}
->
-  {isAdmin && [
-    !currentExpense.fullyCleared && (
-      <MenuItem 
-        key="edit"
-        onClick={() => {
-          handleMenuClose();
-          navigate(`/expenses/edit/${currentExpense.id}`);
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+        MenuListProps={{
+          'aria-labelledby': 'expense-actions-menu',
         }}
       >
-        <EditIcon fontSize="small" style={{ marginRight: 8 }} />
-        Edit
-      </MenuItem>
-    ),
-    <MenuItem 
-      key="delete"
-      onClick={() => {
-        handleMenuClose();
-        handleDeleteClick();
-      }}
-    >
-      <DeleteIcon fontSize="small" style={{ marginRight: 8 }} />
-      Delete
-    </MenuItem>,
-    !currentExpense.fullyCleared && (
-      <MenuItem 
-        key="clear"
-        onClick={() => {
-          handleMenuClose();
-          handleClearClick();
-        }}
-      >
-        <ClearIcon fontSize="small" style={{ marginRight: 8 }} />
-        Clear
-      </MenuItem>
-    )
-  ].filter(Boolean)}
-  <MenuItem 
-    key="history"
-    onClick={handleHistoryClick}
-  >
-    <HistoryIcon fontSize="small" style={{ marginRight: 8 }} />
-    View Full History
-  </MenuItem>
-</Menu>
+        {isAdmin && [
+          !currentExpense.fullyCleared && (
+            <MenuItem 
+              key="edit"
+              onClick={() => {
+                handleMenuClose();
+                navigate(`/expenses/edit/${currentExpense.id}`);
+              }}
+            >
+              <EditIcon fontSize="small" sx={{ mr: 1 }} />
+              Edit
+            </MenuItem>
+          ),
+          <MenuItem 
+            key="delete"
+            onClick={() => {
+              handleMenuClose();
+              handleDeleteClick();
+            }}
+          >
+            <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
+            Delete
+          </MenuItem>,
+          !currentExpense.fullyCleared && (
+            <MenuItem 
+              key="clear"
+              onClick={() => {
+                handleMenuClose();
+                handleClearClick();
+              }}
+            >
+              <ClearIcon fontSize="small" sx={{ mr: 1 }} />
+              Clear
+            </MenuItem>
+          )
+        ].filter(Boolean)}
+        <MenuItem 
+          key="history"
+          onClick={handleHistoryClick}
+        >
+          <HistoryIcon fontSize="small" sx={{ mr: 1 }} />
+          View Full History
+        </MenuItem>
+      </Menu>
+
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
         <DialogTitle>Confirm Delete</DialogTitle>
         <DialogContent>
@@ -600,7 +593,7 @@ const ExpenseList = ({
           <Button onClick={() => setDeleteDialogOpen(false)} color="primary">
             Cancel
           </Button>
-          <Button onClick={handleDeleteConfirm} color="secondary">
+          <Button onClick={handleDeleteConfirm} color="error">
             Delete
           </Button>
         </DialogActions>
@@ -608,7 +601,7 @@ const ExpenseList = ({
 
       <Dialog open={clearDialogOpen} onClose={() => setClearDialogOpen(false)}>
         <DialogTitle>Clear Expense</DialogTitle>
-        <DialogContent className={classes.dialogContent}>
+        <DialogContentBox>
           <Typography variant="subtitle1">
             {currentExpense.description || 'Expense'} (Total: {formatAmount(currentExpense.amount)})
           </Typography>
@@ -630,20 +623,20 @@ const ExpenseList = ({
             }}
           />
           <FormControl fullWidth>
-    <InputLabel>Cleared By</InputLabel>
-    <Select
-      value={selectedMember}
-      onChange={(e) => setSelectedMember(e.target.value)}
-      required
-    >
-      {members.map(member => (
-        <MenuItem key={member.id} value={member.id}>
-          {member.name}
-        </MenuItem>
-      ))}
-    </Select>
-  </FormControl>
-        </DialogContent>
+            <InputLabel>Cleared By</InputLabel>
+            <Select
+              value={selectedMember}
+              onChange={(e) => setSelectedMember(e.target.value)}
+              required
+            >
+              {members.map(member => (
+                <MenuItem key={member.id} value={member.id}>
+                  {member.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </DialogContentBox>
         <DialogActions>
           <Button onClick={() => setClearDialogOpen(false)} color="primary">
             Cancel
@@ -659,56 +652,54 @@ const ExpenseList = ({
         </DialogActions>
       </Dialog>
 
-      
       <Dialog
-  open={historyDialogOpen}
-  onClose={() => setHistoryDialogOpen(false)}
-  maxWidth="md"
-  fullWidth
->
-  <DialogTitle>
-    Payment History for "{currentExpense.description || 'Expense'}" (Total: {formatAmount(currentExpense.amount)})
-  </DialogTitle>
-  <DialogContent dividers>
-    <List>
-      {paymentHistory.length > 0 ? (
-        paymentHistory.map((payment, index) => (
-          <React.Fragment key={index}>
-            <ListItem>
-              <Box className={classes.paymentItem}>
-                <Avatar 
-                  className={classes.avatar}
-                  alt={payment.clearedBy?.name || 'Unknown'}
-                >
-                  {(payment.clearedBy?.name || 'U').charAt(0)}
-                </Avatar>
-                <ListItemText
-                  primary={`${formatAmount(payment.amount)} by ${payment.clearedBy?.name || 'Unknown'}`}
-                  secondary={
-                    <>
-                      {formatDateTime(payment.timestamp || payment.clearedAt)}
-                      {payment.expense?.description && ` • For: ${payment.expense.description}`}
-                    </>
-                  }
-                />
-              </Box>
-            </ListItem>
-            {index < paymentHistory.length - 1 && <Divider />}
-          </React.Fragment>
-        ))
-      ) : (
-        <ListItem>
-          <ListItemText primary="No payment history available" />
-        </ListItem>
-      )}
-    </List>
-  </DialogContent>
-  <DialogActions>
-    <Button onClick={() => setHistoryDialogOpen(false)} color="primary">
-      Close
-    </Button>
-  </DialogActions>
-</Dialog>
+        open={historyDialogOpen}
+        onClose={() => setHistoryDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          Payment History for "{currentExpense.description || 'Expense'}" (Total: {formatAmount(currentExpense.amount)})
+        </DialogTitle>
+        <DialogContent dividers>
+          <List>
+            {paymentHistory.length > 0 ? (
+              paymentHistory.map((payment, index) => (
+                <React.Fragment key={index}>
+                  <ListItem>
+                    <PaymentItem>
+                      <MemberAvatar 
+                        alt={payment.clearedBy?.name || 'Unknown'}
+                      >
+                        {(payment.clearedBy?.name || 'U').charAt(0)}
+                      </MemberAvatar>
+                      <ListItemText
+                        primary={`${formatAmount(payment.amount)} by ${payment.clearedBy?.name || 'Unknown'}`}
+                        secondary={
+                          <>
+                            {formatDateTime(payment.timestamp || payment.clearedAt)}
+                            {payment.expense?.description && ` • For: ${payment.expense.description}`}
+                          </>
+                        }
+                      />
+                    </PaymentItem>
+                  </ListItem>
+                  {index < paymentHistory.length - 1 && <Divider />}
+                </React.Fragment>
+              ))
+            ) : (
+              <ListItem>
+                <ListItemText primary="No payment history available" />
+              </ListItem>
+            )}
+          </List>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setHistoryDialogOpen(false)} color="primary">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Snackbar
         open={snackbar.open}

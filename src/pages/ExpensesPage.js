@@ -13,10 +13,6 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  Select,
-  MenuItem,
-  InputLabel,
-  FormControl,
   Box,
   TablePagination,
   useMediaQuery,
@@ -24,7 +20,7 @@ import {
   Autocomplete,
   Typography
 } from '@mui/material';
-import { Alert } from '@mui/material';
+import Alert from '@mui/material/Alert';
 import { getAllExpenses, deleteExpense, clearExpense, createExpense, updateExpense } from '../api/expenses';
 import { getAllMembers } from '../api/members';
 import { useAuth } from '../context/AuthContext';
@@ -269,7 +265,7 @@ const ExpensesPage = () => {
 
   if (loading && !paginatedExpenses.length) {
     return (
-      <Container style={{ textAlign: 'center', padding: 40 }}>
+      <Container sx={{ textAlign: 'center', padding: 40 }}>
         <CircularProgress />
       </Container>
     );
@@ -282,7 +278,7 @@ const ExpensesPage = () => {
           variant="contained"
           color="primary"
           onClick={() => setAddDialogOpen(true)}
-          style={{ marginBottom: 20 }}
+          sx={{ marginBottom: 20 }}
           fullWidth={isMobile}
           disabled={membersLoading}
         >
@@ -308,10 +304,10 @@ const ExpensesPage = () => {
           onRowsPerPageChange={handleChangeRowsPerPage}
           rowsPerPageOptions={[5, 10, 25]}
           labelRowsPerPage={isMobile ? 'Rows:' : 'Rows per page:'}
-          style={{ marginTop: 16 }}
+          sx={{ marginTop: 16 }}
         />
 
-        {/* Add Expense Dialog with Centered Title */}
+        {/* Add Expense Dialog */}
         <Dialog 
           open={addDialogOpen} 
           onClose={() => setAddDialogOpen(false)} 
@@ -506,8 +502,8 @@ const ExpensesPage = () => {
             severity={snackbar.severity}
             elevation={6}
             variant="filled"
+            sx={{ width: '100%' }}
           >
-		  
             {snackbar.message}
           </Alert>
         </Snackbar>

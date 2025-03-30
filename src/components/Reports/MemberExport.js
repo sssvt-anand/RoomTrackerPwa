@@ -1,5 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Form, Spinner, Alert } from 'react-bootstrap';
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  Button,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  CircularProgress,
+  Alert,
+  Box,
+  Typography
+} from '@mui/material';
 import { exportByMember } from '../api/exports';
 import { getAllMembers } from '../api/members';
 import { saveAs } from 'file-saver';
@@ -56,55 +69,56 @@ const MemberExport = () => {
   };
 
   return (
-    <Card className="shadow-sm mb-4">
-      <Card.Header>
-        <h5 className="mb-0">Export Expenses by Member</h5>
-      </Card.Header>
-      <Card.Body>
-        {error && <Alert variant="danger">{error}</Alert>}
+    <Card sx={{ boxShadow: 3, mb: 4 }}>
+      <CardHeader
+        title={
+          <Typography variant="h6" component="h2">
+            Export Expenses by Member
+          </Typography>
+        }
+        sx={{ borderBottom: '1px solid rgba(0, 0, 0, 0.12)' }}
+      />
+      <CardContent>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
         
-        <Form onSubmit={handleSubmit}>
-          <Form.Group className="mb-3">
-            <Form.Label>Select Member</Form.Label>
-            <Form.Select
+        <Box component="form" onSubmit={handleSubmit}>
+          <FormControl fullWidth sx={{ mb: 3 }} error={!selectedMember && !!error}>
+            <InputLabel id="member-select-label">Select Member</InputLabel>
+            <Select
+              labelId="member-select-label"
+              id="member-select"
               value={selectedMember}
               onChange={(e) => setSelectedMember(e.target.value)}
               disabled={loading || members.length === 0}
+              label="Select Member"
             >
-              <option value="">Choose a member...</option>
+              <MenuItem value="">
+                <em>Choose a member...</em>
+              </MenuItem>
               {members.map((member) => (
-                <option key={member.id} value={member.id}>
+                <MenuItem key={member.id} value={member.id}>
                   {member.name} ({member.email || member.id})
-                </option>
+                </MenuItem>
               ))}
-            </Form.Select>
-          </Form.Group>
+            </Select>
+          </FormControl>
           
-          <div className="d-flex justify-content-end">
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Button
-              variant="primary"
+              variant="contained"
               type="submit"
               disabled={loading || !selectedMember}
+              startIcon={loading ? <CircularProgress size={20} /> : null}
             >
-              {loading ? (
-                <>
-                  <Spinner
-                    as="span"
-                    animation="border"
-                    size="sm"
-                    role="status"
-                    aria-hidden="true"
-                    className="me-2"
-                  />
-                  Exporting...
-                </>
-              ) : (
-                'Export Expenses'
-              )}
+              {loading ? 'Exporting...' : 'Export Expenses'}
             </Button>
-          </div>
-        </Form>
-      </Card.Body>
+          </Box>
+        </Box>
+      </CardContent>
     </Card>
   );
 };

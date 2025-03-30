@@ -11,8 +11,9 @@ import {
   MenuItem,
   FormHelperText,
   Paper,
-  CircularProgress
-} from '@material-ui/core';
+  CircularProgress,
+  Box
+} from '@mui/material';
 
 const ExpenseForm = ({ initialValues, onSubmit, members, loading }) => {
   const validationSchema = Yup.object({
@@ -20,61 +21,103 @@ const ExpenseForm = ({ initialValues, onSubmit, members, loading }) => {
     amount: Yup.number()
       .required('Amount is required')
       .positive('Amount must be positive'),
-    memberId: Yup.string().required('Member is required')
+    memberId: Yup.string().required('Member is required'),
+    date: Yup.date().required('Date is required').default(() => new Date())
   });
 
   const formik = useFormik({
     initialValues: initialValues || {
       description: '',
       amount: '',
-      memberId: ''
+      memberId: '',
+      date: new Date().toISOString().split('T')[0] // Default to today's date
     },
     validationSchema,
     onSubmit: (values) => {
       onSubmit({
         ...values,
-        amount: parseFloat(values.amount)
+        amount: parseFloat(values.amount),
+        date: new Date(values.date)
       });
     }
   });
 
   return (
-    <Paper style={{ padding: 20 }}>
-      <form onSubmit={formik.handleSubmit}>
+    <Paper elevation={3} sx={{ p: 3, maxWidth: 500, mx: 'auto' }}>
+      <Box 
+        component="form" 
+        onSubmit={formik.handleSubmit}
+        sx={{ 
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 2
+        }}
+      >
         <TextField
           fullWidth
           id="description"
           name="description"
-          label="Description*"
+          label="Description"
           value={formik.values.description}
           onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
           error={formik.touched.description && Boolean(formik.errors.description)}
           helperText={formik.touched.description && formik.errors.description}
-          margin="normal"
+          required
+          variant="outlined"
         />
 
         <TextField
           fullWidth
           id="amount"
           name="amount"
-          label="Amount*"
+          label="Amount"
           type="number"
           value={formik.values.amount}
           onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
           error={formik.touched.amount && Boolean(formik.errors.amount)}
           helperText={formik.touched.amount && formik.errors.amount}
-          margin="normal"
+          required
+          variant="outlined"
+          InputProps={{
+            startAdornment: '$'
+          }}
         />
 
-        <FormControl fullWidth margin="normal" error={formik.touched.memberId && Boolean(formik.errors.memberId)}>
-          <InputLabel id="member-label">Member*</InputLabel>
+        <TextField
+          fullWidth
+          id="date"
+          name="date"
+          label="Date"
+          type="date"
+          value={formik.values.date}
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          error={formik.touched.date && Boolean(formik.errors.date)}
+          helperText={formik.touched.date && formik.errors.date}
+          required
+          variant="outlined"
+          InputLabelProps={{
+            shrink: true
+          }}
+        />
+
+        <FormControl 
+          fullWidth 
+          error={formik.touched.memberId && Boolean(formik.errors.memberId)}
+          variant="outlined"
+        >
+          <InputLabel id="member-label">Member</InputLabel>
           <Select
             labelId="member-label"
             id="memberId"
             name="memberId"
             value={formik.values.memberId}
             onChange={formik.handleChange}
-            label="Member*"
+            onBlur={formik.handleBlur}
+            label="Member"
+            required
           >
             {members.map((member) => (
               <MenuItem key={member.id} value={member.id}>
@@ -92,12 +135,13 @@ const ExpenseForm = ({ initialValues, onSubmit, members, loading }) => {
           variant="contained"
           fullWidth
           type="submit"
-          style={{ marginTop: 20 }}
-          disabled={loading}
+          disabled={loading || !formik.isValid}
+          size="large"
+          sx={{ mt: 2 }}
         >
           {loading ? <CircularProgress size={24} /> : 'Submit'}
         </Button>
-      </form>
+      </Box>
     </Paper>
   );
 };

@@ -12,8 +12,9 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
-  Divider
-} from '@material-ui/core';
+  Divider,
+  Box
+} from '@mui/material';
 import {
   Menu as MenuIcon,
   Info as DetailsIcon,
@@ -22,11 +23,14 @@ import {
   Person as MemberIcon,
   Description as DescIcon,
   AttachMoney as AmountIcon
-} from '@material-ui/icons';
+} from '@mui/icons-material';
 
 const formatCurrency = (amount) => {
   const number = Number(amount);
-  return isNaN(number) ? '$0.00' : `$${number.toFixed(2)}`;
+  return isNaN(number) ? '$0.00' : new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD'
+  }).format(number);
 };
 
 const ExpenseItem = ({ expense, onDelete, isAdmin }) => {
@@ -39,7 +43,8 @@ const ExpenseItem = ({ expense, onDelete, isAdmin }) => {
     amount: expense?.amount || 0,
     description: expense?.description || '',
     memberName: expense?.memberName || 'Unassigned',
-    id: expense?.id || null
+    id: expense?.id || null,
+    date: expense?.date || new Date().toISOString()
   };
 
   const handleDrawerToggle = () => {
@@ -47,34 +52,54 @@ const ExpenseItem = ({ expense, onDelete, isAdmin }) => {
   };
 
   const drawerContent = (
-    <div>
-      <div style={{ display: 'flex', alignItems: 'center', padding: '8px 16px' }}>
-        <IconButton onClick={handleDrawerToggle}>
+    <Box sx={{ width: 280 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', p: 2 }}>
+        <IconButton onClick={handleDrawerToggle} size="large">
           <BackIcon />
         </IconButton>
-        <Typography variant="h6" style={{ marginLeft: 8 }}>
+        <Typography variant="h6" sx={{ ml: 1 }}>
           Expense Details
         </Typography>
-      </div>
+      </Box>
       <Divider />
       <List>
         <ListItem>
-          <ListItemIcon><AmountIcon /></ListItemIcon>
-          <ListItemText primary="Amount" secondary={formatCurrency(safeExpense.amount)} />
+          <ListItemIcon><AmountIcon color="primary" /></ListItemIcon>
+          <ListItemText 
+            primary="Amount" 
+            secondary={formatCurrency(safeExpense.amount)} 
+            secondaryTypographyProps={{ color: 'text.primary' }}
+          />
         </ListItem>
         <ListItem>
-          <ListItemIcon><MemberIcon /></ListItemIcon>
-          <ListItemText primary="Assigned To" secondary={safeExpense.memberName} />
+          <ListItemIcon><MemberIcon color="primary" /></ListItemIcon>
+          <ListItemText 
+            primary="Assigned To" 
+            secondary={safeExpense.memberName} 
+            secondaryTypographyProps={{ color: 'text.primary' }}
+          />
+        </ListItem>
+        <ListItem>
+          <ListItemIcon><DescIcon color="primary" /></ListItemIcon>
+          <ListItemText 
+            primary="Date" 
+            secondary={new Date(safeExpense.date).toLocaleDateString()} 
+            secondaryTypographyProps={{ color: 'text.primary' }}
+          />
         </ListItem>
         {safeExpense.description && (
           <ListItem>
-            <ListItemIcon><DescIcon /></ListItemIcon>
-            <ListItemText primary="Description" secondary={safeExpense.description} />
+            <ListItemIcon><DescIcon color="primary" /></ListItemIcon>
+            <ListItemText 
+              primary="Description" 
+              secondary={safeExpense.description} 
+              secondaryTypographyProps={{ color: 'text.primary' }}
+            />
           </ListItem>
         )}
       </List>
       <Divider />
-      <div style={{ padding: 16 }}>
+      <Box sx={{ p: 2 }}>
         <Button
           fullWidth
           variant="contained"
@@ -84,7 +109,7 @@ const ExpenseItem = ({ expense, onDelete, isAdmin }) => {
             handleDrawerToggle();
             safeExpense.id && navigate(`/expenses/${safeExpense.id}`);
           }}
-          style={{ marginBottom: 8 }}
+          sx={{ mb: 1 }}
         >
           Full Details
         </Button>
@@ -92,7 +117,7 @@ const ExpenseItem = ({ expense, onDelete, isAdmin }) => {
           <Button
             fullWidth
             variant="contained"
-            color="secondary"
+            color="error"
             startIcon={<DeleteIcon />}
             onClick={() => {
               handleDrawerToggle();
@@ -102,23 +127,32 @@ const ExpenseItem = ({ expense, onDelete, isAdmin }) => {
             Delete Expense
           </Button>
         )}
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 
   return (
     <>
-      <Card style={{ marginBottom: 15 }}>
+      <Card sx={{ mb: 2, ':hover': { boxShadow: 3 } }}>
         <CardContent>
           <Grid container spacing={2} alignItems="center">
-            <Grid item xs={10} onClick={handleDrawerToggle} style={{ cursor: 'pointer' }}>
-              <Typography variant="h6">{safeExpense.title}</Typography>
-              <Typography color="textSecondary">
+            <Grid item xs={10} onClick={handleDrawerToggle} sx={{ cursor: 'pointer' }}>
+              <Typography variant="h6" component="div">
+                {safeExpense.title}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
                 {formatCurrency(safeExpense.amount)}
               </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {new Date(safeExpense.date).toLocaleDateString()}
+              </Typography>
             </Grid>
-            <Grid item xs={2} style={{ textAlign: 'right' }}>
-              <IconButton onClick={handleDrawerToggle}>
+            <Grid item xs={2} sx={{ textAlign: 'right' }}>
+              <IconButton 
+                onClick={handleDrawerToggle} 
+                aria-label="expense menu"
+                size="large"
+              >
                 <MenuIcon />
               </IconButton>
             </Grid>
@@ -135,7 +169,12 @@ const ExpenseItem = ({ expense, onDelete, isAdmin }) => {
         ModalProps={{
           keepMounted: true, // Better open performance on mobile
         }}
-        style={{ width: 280 }}
+        sx={{
+          '& .MuiDrawer-paper': { 
+            width: 280,
+            boxSizing: 'border-box'
+          }
+        }}
       >
         {drawerContent}
       </Drawer>

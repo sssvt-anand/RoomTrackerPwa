@@ -16,73 +16,69 @@ import {
   Box,
   CircularProgress,
   useMediaQuery,
-  Grid
-} from '@material-ui/core';
-import { Alert } from '@material-ui/lab';
-import { makeStyles, useTheme } from '@material-ui/core/styles';
-import { DatePicker } from '@material-ui/pickers';
-import 'date-fns';
+  Grid,
+  Alert,
+  styled
+} from '@mui/material';
+import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { Person as PersonIcon } from '@mui/icons-material';
 
-const useStyles = makeStyles((theme) => ({
-  root: {
-    paddingTop: theme.spacing(4),
-    paddingBottom: theme.spacing(4),
-    [theme.breakpoints.down('sm')]: {
-      paddingTop: theme.spacing(8),
-      paddingLeft: theme.spacing(2),
-      paddingRight: theme.spacing(2),
-    },
-  },
-  paper: {
-    padding: theme.spacing(4),
-    borderRadius: 12,
-    [theme.breakpoints.down('sm')]: {
-      padding: theme.spacing(3),
-      margin: 0,
-    },
-  },
-  titleWrapper: {
-    display: 'flex',
-    justifyContent: 'center',
-    width: '100%',
-    marginBottom: theme.spacing(4),
-    [theme.breakpoints.down('sm')]: {
-      marginBottom: theme.spacing(3),
-    },
-  },
-  formTitle: {
-    fontWeight: 'bold',
-    textAlign: 'center',
-    width: '100%',
-  },
-  formField: {
-    marginBottom: theme.spacing(3),
-  },
-  buttonGroup: {
-    marginTop: theme.spacing(4),
-    display: 'flex',
-    justifyContent: 'space-between',
-    gap: theme.spacing(2),
-    [theme.breakpoints.down('sm')]: {
-      flexDirection: 'column-reverse',
-    },
-  },
-  amountRemaining: {
-    marginTop: theme.spacing(2),
-    padding: theme.spacing(2),
-    backgroundColor: theme.palette.grey[100],
-    borderRadius: 8,
-    textAlign: 'center',
-    fontWeight: 'bold',
-  },
-  requiredAsterisk: {
-    color: theme.palette.error.main,
-    marginLeft: theme.spacing(0.5),
+const StyledPaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(4),
+  borderRadius: 12,
+  [theme.breakpoints.down('sm')]: {
+    padding: theme.spacing(3),
+    margin: 0,
   },
 }));
 
+const FormTitle = styled(Typography)(({ theme }) => ({
+  fontWeight: 'bold',
+  textAlign: 'center',
+  width: '100%',
+  marginBottom: theme.spacing(4),
+  [theme.breakpoints.down('sm')]: {
+    marginBottom: theme.spacing(3),
+  },
+}));
+
+const FormField = styled(Box)(({ theme }) => ({
+  marginBottom: theme.spacing(3),
+}));
+
+const ButtonGroup = styled(Box)(({ theme }) => ({
+  marginTop: theme.spacing(4),
+  display: 'flex',
+  justifyContent: 'space-between',
+  gap: theme.spacing(2),
+  [theme.breakpoints.down('sm')]: {
+    flexDirection: 'column-reverse',
+  },
+}));
+
+const AmountRemaining = styled(Box)(({ theme }) => ({
+  marginTop: theme.spacing(2),
+  padding: theme.spacing(2),
+  backgroundColor: theme.palette.grey[100],
+  borderRadius: 8,
+  textAlign: 'center',
+  fontWeight: 'bold',
+}));
+
+const RequiredAsterisk = styled('span')(({ theme }) => ({
+  color: theme.palette.error.main,
+  marginLeft: theme.spacing(0.5),
+}));
+
+const renderLabelWithAsterisk = (labelText) => (
+  <span>
+    {labelText}
+    <RequiredAsterisk>*</RequiredAsterisk>
+  </span>
+);
+
 const AddExpense = () => {
-  const classes = useStyles();
   const navigate = useNavigate();
   const { user } = useAuth();
   const theme = useTheme();
@@ -187,143 +183,150 @@ const AddExpense = () => {
     }
   };
 
-  const renderLabelWithAsterisk = (labelText) => (
-    <span>
-      {labelText}
-      <span className={classes.requiredAsterisk}>*</span>
-    </span>
-  );
-
   return (
-    <Container 
-      maxWidth="sm" 
-      className={classes.root}
-      disableGutters={isMobile}
-    >
-      <Paper elevation={3} className={classes.paper}>
-        <Box className={classes.titleWrapper}>
-          <Typography variant="h5" className={classes.formTitle}>
-            Add New Expense
-          </Typography>
-        </Box>
-        
-        <form onSubmit={handleSubmit}>
-          <FormControl 
-            fullWidth 
-            variant="outlined" 
-            className={classes.formField}
-            required
-          >
-            <InputLabel>{renderLabelWithAsterisk('For Member')}</InputLabel>
-            <Select
-              name="memberId"
-              value={formData.memberId}
-              onChange={handleChange}
-              label={renderLabelWithAsterisk('For Member')}
-              disabled={membersLoading}
-            >
-              {membersLoading ? (
-                <MenuItem disabled>
-                  <CircularProgress size={24} />
-                </MenuItem>
-              ) : (
-                members.map(member => (
-                  <MenuItem key={member.id} value={member.id}>
-                    {member.name}
-                  </MenuItem>
-                ))
-              )}
-            </Select>
-          </FormControl>
+    <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <Container 
+        maxWidth="sm" 
+        sx={{ 
+          pt: 4,
+          pb: 4,
+          [theme.breakpoints.down('sm')]: {
+            pt: 8,
+            px: 2,
+          }
+        }}
+        disableGutters={isMobile}
+      >
+        <StyledPaper elevation={3}>
+          <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+            <FormTitle variant="h5">
+              Add New Expense
+            </FormTitle>
+          </Box>
+          
+          <form onSubmit={handleSubmit}>
+            <FormField>
+              <FormControl fullWidth required>
+                <InputLabel>{renderLabelWithAsterisk('For Member')}</InputLabel>
+                <Select
+                  name="memberId"
+                  value={formData.memberId}
+                  onChange={handleChange}
+                  label={renderLabelWithAsterisk('For Member')}
+                  disabled={membersLoading}
+                  startAdornment={<PersonIcon color="action" sx={{ mr: 1 }} />}
+                >
+                  {membersLoading ? (
+                    <MenuItem disabled>
+                      <CircularProgress size={24} />
+                    </MenuItem>
+                  ) : (
+                    members.map(member => (
+                      <MenuItem key={member.id} value={member.id}>
+                        {member.name}
+                      </MenuItem>
+                    ))
+                  )}
+                </Select>
+              </FormControl>
+            </FormField>
 
-          <TextField
-            fullWidth
-            label={renderLabelWithAsterisk('Description')}
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            variant="outlined"
-            className={classes.formField}
-            required
-          />
-
-          <Grid container spacing={2} className={classes.formField}>
-            <Grid item xs={12} sm={6}>
+            <FormField>
               <TextField
                 fullWidth
-                label={renderLabelWithAsterisk('Amount ($)')}
-                name="amount"
-                type="number"
-                value={formData.amount}
+                label={renderLabelWithAsterisk('Description')}
+                name="description"
+                value={formData.description}
                 onChange={handleChange}
                 variant="outlined"
-                inputProps={{ 
-                  step: "0.01", 
-                  min: "0.01" 
-                }}
                 required
               />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <DatePicker
-                label={renderLabelWithAsterisk('Expense Date')}
-                value={formData.date}
-                onChange={handleDateChange}
-                renderInput={(params) => (
+            </FormField>
+
+            <FormField>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
                   <TextField
-                    {...params}
                     fullWidth
+                    label={renderLabelWithAsterisk('Amount ($)')}
+                    name="amount"
+                    type="number"
+                    value={formData.amount}
+                    onChange={handleChange}
                     variant="outlined"
+                    inputProps={{ 
+                      step: "0.01", 
+                      min: "0.01" 
+                    }}
                     required
                   />
-                )}
-              />
-            </Grid>
-          </Grid>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <DatePicker
+                    label={renderLabelWithAsterisk('Expense Date')}
+                    value={formData.date}
+                    onChange={handleDateChange}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        fullWidth
+                        variant="outlined"
+                        required
+                      />
+                    )}
+                  />
+                </Grid>
+              </Grid>
+            </FormField>
 
-          <Box className={classes.amountRemaining}>
-            <Typography variant="body1">
-              Remaining: ${remainingAmount.toFixed(2)}
-            </Typography>
-          </Box>
+            <AmountRemaining>
+              <Typography variant="body1">
+                Remaining: ${remainingAmount.toFixed(2)}
+              </Typography>
+            </AmountRemaining>
 
-          {error && (
-            <Alert severity="error" className={classes.formField}>
-              {error}
-            </Alert>
-          )}
+            {error && (
+              <FormField>
+                <Alert severity="error">
+                  {error}
+                </Alert>
+              </FormField>
+            )}
 
-          {success && (
-            <Alert severity="success" className={classes.formField}>
-              {success}
-            </Alert>
-          )}
+            {success && (
+              <FormField>
+                <Alert severity="success">
+                  {success}
+                </Alert>
+              </FormField>
+            )}
 
-          <Box className={classes.buttonGroup}>
-            <Button 
-              variant="outlined" 
-              onClick={() => navigate('/expenses')}
-              disabled={loading}
-              size="large"
-              fullWidth={isMobile}
-            >
-              CANCEL
-            </Button>
-            <Button 
-              type="submit" 
-              variant="contained" 
-              color="primary"
-              disabled={loading || membersLoading}
-              startIcon={loading ? <CircularProgress size={20} /> : null}
-              size="large"
-              fullWidth={isMobile}
-            >
-              {loading ? 'ADDING...' : 'ADD EXPENSE'}
-            </Button>
-          </Box>
-        </form>
-      </Paper>
-    </Container>
+            <ButtonGroup>
+              <Button 
+                variant="outlined" 
+                onClick={() => navigate('/expenses')}
+                disabled={loading}
+                size="large"
+                fullWidth={isMobile}
+              >
+                CANCEL
+              </Button>
+              <Button 
+                type="submit" 
+                variant="contained" 
+                color="primary"
+                disabled={loading || membersLoading}
+                startIcon={loading ? <CircularProgress size={20} /> : null}
+                size="large"
+                fullWidth={isMobile}
+              >
+                {loading ? 'ADDING...' : 'ADD EXPENSE'}
+              </Button>
+            </ButtonGroup>
+          </form>
+        </StyledPaper>
+      </Container>
+    </LocalizationProvider>
   );
 };
 
