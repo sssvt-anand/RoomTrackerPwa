@@ -62,9 +62,9 @@ const Navbar = () => {
       display: 'flex', 
       flexDirection: 'column', 
       height: '100%', 
-      backgroundColor: '#0d1b2a', 
-      color: '#ffffff',
-      pt: { xs: '64px', sm: 0 } // Added padding top for mobile
+      backgroundColor: isMobile ? '#ffffff' : '#0d1b2a', // White background for mobile
+      color: isMobile ? '#000000' : '#ffffff', // Black text for mobile
+      pt: { xs: '64px', sm: 0 }
     }}>
       {/* Collapse/Expand Button */}
       {!isMobile && (
@@ -75,56 +75,56 @@ const Navbar = () => {
         </Box>
       )}
       
-      <Divider sx={{ backgroundColor: '#374151' }} />
+      <Divider sx={{ backgroundColor: isMobile ? '#e0e0e0' : '#374151' }} />
       
       <List sx={{ px: collapsed ? 1 : 2 }}>
         {user ? (
           <>
             <ListItem button component={Link} to="/" sx={getMenuItemStyle('/')}>
-              <ListItemIcon sx={{ color: 'inherit', minWidth: collapsed ? '40px' : '56px' }}>
+              <ListItemIcon sx={{ color: isMobile ? '#000000' : 'inherit', minWidth: collapsed ? '40px' : '56px' }}>
                 <DashboardIcon />
               </ListItemIcon>
-              {!collapsed && <ListItemText primary="Dashboard" />}
+              {!collapsed && <ListItemText primary="Dashboard" sx={{ color: isMobile ? '#000000' : 'inherit' }} />}
             </ListItem>
             <ListItem button component={Link} to="/expenses" sx={getMenuItemStyle('/expenses')}>
-              <ListItemIcon sx={{ color: 'inherit', minWidth: collapsed ? '40px' : '56px' }}>
+              <ListItemIcon sx={{ color: isMobile ? '#000000' : 'inherit', minWidth: collapsed ? '40px' : '56px' }}>
                 <ExpensesIcon />
               </ListItemIcon>
-              {!collapsed && <ListItemText primary="Expenses" />}
+              {!collapsed && <ListItemText primary="Expenses" sx={{ color: isMobile ? '#000000' : 'inherit' }} />}
             </ListItem>
             <ListItem button component={Link} to="/members" sx={getMenuItemStyle('/members')}>
-              <ListItemIcon sx={{ color: 'inherit', minWidth: collapsed ? '40px' : '56px' }}>
+              <ListItemIcon sx={{ color: isMobile ? '#000000' : 'inherit', minWidth: collapsed ? '40px' : '56px' }}>
                 <MembersIcon />
               </ListItemIcon>
-              {!collapsed && <ListItemText primary="Members" />}
+              {!collapsed && <ListItemText primary="Members" sx={{ color: isMobile ? '#000000' : 'inherit' }} />}
             </ListItem>
             <ListItem button component={Link} to="/reports" sx={getMenuItemStyle('/reports')}>
-              <ListItemIcon sx={{ color: 'inherit', minWidth: collapsed ? '40px' : '56px' }}>
+              <ListItemIcon sx={{ color: isMobile ? '#000000' : 'inherit', minWidth: collapsed ? '40px' : '56px' }}>
                 <ReportsIcon />
               </ListItemIcon>
-              {!collapsed && <ListItemText primary="Reports" />}
+              {!collapsed && <ListItemText primary="Reports" sx={{ color: isMobile ? '#000000' : 'inherit' }} />}
             </ListItem>
-            <Divider sx={{ backgroundColor: '#374151', my: 1 }} />
+            <Divider sx={{ backgroundColor: isMobile ? '#e0e0e0' : '#374151', my: 1 }} />
             <ListItem button onClick={handleLogout} sx={getMenuItemStyle('/logout')}>
-              <ListItemIcon sx={{ color: 'inherit', minWidth: collapsed ? '40px' : '56px' }}>
+              <ListItemIcon sx={{ color: isMobile ? '#000000' : 'inherit', minWidth: collapsed ? '40px' : '56px' }}>
                 <LogoutIcon />
               </ListItemIcon>
-              {!collapsed && <ListItemText primary="Logout" />}
+              {!collapsed && <ListItemText primary="Logout" sx={{ color: isMobile ? '#000000' : 'inherit' }} />}
             </ListItem>
           </>
         ) : (
           <>
             <ListItem button component={Link} to="/login" sx={getMenuItemStyle('/login')}>
-              <ListItemIcon sx={{ color: 'inherit', minWidth: collapsed ? '40px' : '56px' }}>
+              <ListItemIcon sx={{ color: isMobile ? '#000000' : 'inherit', minWidth: collapsed ? '40px' : '56px' }}>
                 <LoginIcon />
               </ListItemIcon>
-              {!collapsed && <ListItemText primary="Login" />}
+              {!collapsed && <ListItemText primary="Login" sx={{ color: isMobile ? '#000000' : 'inherit' }} />}
             </ListItem>
             <ListItem button component={Link} to="/register" sx={getMenuItemStyle('/register')}>
-              <ListItemIcon sx={{ color: 'inherit', minWidth: collapsed ? '40px' : '56px' }}>
+              <ListItemIcon sx={{ color: isMobile ? '#000000' : 'inherit', minWidth: collapsed ? '40px' : '56px' }}>
                 <RegisterIcon />
               </ListItemIcon>
-              {!collapsed && <ListItemText primary="Register" />}
+              {!collapsed && <ListItemText primary="Register" sx={{ color: isMobile ? '#000000' : 'inherit' }} />}
             </ListItem>
           </>
         )}
@@ -135,14 +135,14 @@ const Navbar = () => {
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
-      {/* Mobile menu button */}
+      {/* Mobile menu button - changed to black */}
       {isMobile && (
         <IconButton 
           sx={{ 
             position: 'fixed',
             top: 16,
             left: 16,
-            color: '#ffffff',
+            color: '#000000', // Changed to black
             zIndex: theme.zIndex.drawer + 2,
           }} 
           onClick={handleDrawerToggle}
@@ -169,8 +169,8 @@ const Navbar = () => {
             display: { xs: 'block', sm: 'none' },
             '& .MuiDrawer-paper': { 
               width: drawerWidth,
-              backgroundColor: '#0d1b2a',
-              color: '#ffffff',
+              backgroundColor: '#ffffff', // White background for mobile
+              color: '#000000', // Black text for mobile
               boxSizing: 'border-box',
               zIndex: theme.zIndex.drawer + 1,
             },
@@ -179,7 +179,7 @@ const Navbar = () => {
           {drawerContent(false)}
         </Drawer>
 
-        {/* Desktop Drawer */}
+        {/* Desktop Drawer (unchanged) */}
         <Drawer
           variant="permanent"
           sx={{
@@ -209,10 +209,10 @@ const Navbar = () => {
           p: 3, 
           width: { sm: `calc(100% - ${desktopCollapsed ? collapsedWidth : drawerWidth}px)` },
           ml: { sm: `${desktopCollapsed ? collapsedWidth : drawerWidth}px` },
-          pt: { xs: '80px', sm: 3 }, // Added padding top for mobile
+          pt: { xs: '80px', sm: 3 },
         }}
       >
-        {/* This is where your page content (AddExpense) will render */}
+        {/* Page content */}
       </Box>
     </Box>
   );

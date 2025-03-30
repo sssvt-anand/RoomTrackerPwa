@@ -62,7 +62,6 @@ const ExpensesPage = () => {
     try {
       setMembersLoading(true);
       const membersData = await getAllMembers();
-      // If current user isn't in the list, add them
       if (user?.id && !membersData.some(m => m.id === user.id)) {
         const updatedMembers = [...membersData, { id: user.id, name: 'Me' }];
         setMembers(updatedMembers);
@@ -204,7 +203,6 @@ const ExpensesPage = () => {
         throw new Error('Invalid amount');
       }
   
-      // Verify member exists
       const memberExists = members.some(m => m.id === memberId);
       if (!memberExists) throw new Error('Invalid member selected');
   
@@ -278,9 +276,9 @@ const ExpensesPage = () => {
           variant="contained"
           color="primary"
           onClick={() => setAddDialogOpen(true)}
-          sx={{ marginBottom: 20 }}
           fullWidth={isMobile}
           disabled={membersLoading}
+          sx={{ mb: 1 }}  // Reduced margin bottom to remove extra space
         >
           Add New Expense
         </Button>
@@ -304,7 +302,7 @@ const ExpensesPage = () => {
           onRowsPerPageChange={handleChangeRowsPerPage}
           rowsPerPageOptions={[5, 10, 25]}
           labelRowsPerPage={isMobile ? 'Rows:' : 'Rows per page:'}
-          sx={{ marginTop: 16 }}
+          sx={{ mt: 2 }}
         />
 
         {/* Add Expense Dialog */}
