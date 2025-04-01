@@ -103,6 +103,7 @@ export const AuthProvider = ({ children }) => {
       value={{
         user,
         members,
+        token: user?.token || null,
         authLoading,
         membersLoading,
         error,

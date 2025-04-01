@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
 import {
   Table,
   TableBody,
@@ -12,39 +11,16 @@ import {
   CircularProgress,
   Chip,
   Box,
-  IconButton,
-  Menu,
-  MenuItem,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  TextField,
-  Select,
-  InputLabel,
-  FormControl,
+  Avatar,
+  Collapse,
+  Divider,
   List,
   ListItem,
   ListItemText,
-  Divider,
-  Collapse,
-  Avatar,
-  Snackbar,
-  styled
+ 
 } from '@mui/material';
-import Alert from '@mui/material/Alert';
-import {
-  MoreVert as MoreIcon,
-  Delete as DeleteIcon,
-  Edit as EditIcon,
-  Check as ClearIcon,
-  History as HistoryIcon,
-  ExpandMore as ExpandMoreIcon,
-  ExpandLess as ExpandLessIcon
-} from '@mui/icons-material';
-import { useAuth } from '../../context/AuthContext';
-import { getPaymentHistory } from '../../api/expenses';
+
+import { styled } from '@mui/material/styles';
 
 const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
   marginTop: theme.spacing(3),
@@ -88,27 +64,7 @@ const StatusText = styled(Box)(({ theme }) => ({
   lineHeight: 1.3,
 }));
 
-const ActionCell = styled(TableCell)(({ theme }) => ({
-  width: 150,
-}));
 
-const MenuButton = styled(IconButton)(({ theme }) => ({
-  padding: theme.spacing(1),
-}));
-
-const DialogContentBox = styled(DialogContent)(({ theme }) => ({
-  display: 'flex',
-  flexDirection: 'column',
-  gap: theme.spacing(2),
-}));
-
-const PaymentHistoryItem = styled(ListItem)(({ theme }) => ({
-  paddingLeft: theme.spacing(4),
-}));
-
-const ExpandButton = styled(IconButton)(({ theme }) => ({
-  marginLeft: 'auto',
-}));
 
 const MemberAvatar = styled(Avatar)(({ theme }) => ({
   width: theme.spacing(4),
@@ -123,43 +79,11 @@ const PaymentItem = styled(Box)(({ theme }) => ({
 
 const ExpenseList = ({ 
   expenses = [], 
-  loading = false, 
-  refreshData = () => {},
-  onDelete = () => {},
-  onClearExpense = () => {},
-  members = [] 
+  loading = false,
+  members = [],
+  onClickExpense = () => {}
 }) => {
-  const navigate = useNavigate();
-  const { isAdmin } = useAuth();
-  
-  const [anchorEl, setAnchorEl] = useState(null);
-  const [currentExpense, setCurrentExpense] = useState({
-    id: '',
-    description: '',
-    amount: 0,
-    date: '',
-    member: { name: '' },
-    clearedAmount: 0,
-    paymentHistory: []
-  });
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [clearDialogOpen, setClearDialogOpen] = useState(false);
-  const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
-  const [clearAmount, setClearAmount] = useState('');
-  const [selectedMember, setSelectedMember] = useState('');
-  const [paymentHistory, setPaymentHistory] = useState([]);
   const [expandedExpenses, setExpandedExpenses] = useState({});
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: '',
-    severity: 'success',
-  });
-  const [isClearing, setIsClearing] = useState(false);
-  const [localExpenses, setLocalExpenses] = useState(expenses);
-
-  useEffect(() => {
-    setLocalExpenses(expenses || []);
-  }, [expenses]);
 
   const formatAmount = (amount) => {
     try {
@@ -182,22 +106,6 @@ const ExpenseList = ({
       });
     } catch {
       return '';
-    }
-  };
-
-  const formatDateTime = (dateString) => {
-    if (!dateString) return 'Unknown time';
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
-      });
-    } catch {
-      return 'Unknown time';
     }
   };
 
@@ -258,165 +166,9 @@ const ExpenseList = ({
     }
   };
 
-  const handleMenuOpen = (event, expense) => {
-    setAnchorEl(event.currentTarget);
-    setCurrentExpense(expense || {
-      id: '',
-      description: '',
-      amount: 0,
-      date: '',
-      member: { name: '' },
-      clearedAmount: 0,
-      paymentHistory: []
-    });
-  };
+  
 
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleDeleteClick = () => {
-    if (!currentExpense?.id) {
-      showSnackbar('No expense selected', 'error');
-      return;
-    }
-    setDeleteDialogOpen(true);
-  };
-
-  const handleClearClick = () => {
-    if (!currentExpense?.id) {
-      showSnackbar('No expense selected', 'error');
-      return;
-    }
-    setClearAmount('');
-    setSelectedMember('');
-    setClearDialogOpen(true);
-  };
-
-  const handleHistoryClick = async () => {
-    try {
-      if (!currentExpense?.id) {
-        throw new Error('No expense selected');
-      }
-      const history = await getPaymentHistory(currentExpense.id);
-      setPaymentHistory(history || []);
-      setHistoryDialogOpen(true);
-    } catch (error) {
-      console.error('Error fetching payment history:', error);
-      showSnackbar('Failed to load payment history', 'error');
-    } finally {
-      handleMenuClose();
-    }
-  };
-
-  const toggleExpand = (expenseId) => {
-    if (!expenseId) return;
-    setExpandedExpenses(prev => ({
-      ...prev,
-      [expenseId]: !prev[expenseId]
-    }));
-  };
-
-  const handleDeleteConfirm = async () => {
-    try {
-      if (!currentExpense?.id) {
-        throw new Error('No expense selected');
-      }
-      await onDelete(currentExpense.id);
-      setDeleteDialogOpen(false);
-      showSnackbar('Expense deleted successfully');
-      await refreshData();
-    } catch (error) {
-      showSnackbar(error.message || 'Failed to delete expense', 'error');
-    }
-  };
-
-  const handleClearConfirm = async () => {
-    setIsClearing(true);
-    try {
-      if (!currentExpense?.id) throw new Error('No expense selected');
-      
-      const amountToClear = parseFloat(clearAmount);
-      const remainingAmount = currentExpense.remainingAmount || 
-                         (currentExpense.amount - (currentExpense.clearedAmount || 0));
-
-      if (isNaN(amountToClear) || amountToClear <= 0) {
-        throw new Error('Please enter a valid positive amount');
-      }
-      
-      if (amountToClear > remainingAmount) {
-        throw new Error(`Cannot clear more than remaining ₹${remainingAmount.toFixed(2)}`);
-      }
-      
-      if (!selectedMember) throw new Error('Please select a member');
-      const clearingMember = members.find(m => m.id === selectedMember);
-      if (!clearingMember) throw new Error('Selected member not found');
-
-      // Optimistically update the UI
-      const tempExpense = {
-        ...currentExpense,
-        clearedAmount: (currentExpense.clearedAmount || 0) + amountToClear,
-        remainingAmount: remainingAmount - amountToClear,
-        lastClearedBy: { 
-          id: clearingMember.id, 
-          name: clearingMember.name  
-        },
-        lastClearedAt: new Date().toISOString(),
-        paymentHistory: [
-          ...(currentExpense.paymentHistory || []),
-          {
-            amount: amountToClear,
-            clearedBy: { 
-              id: clearingMember.id, 
-              name: clearingMember.name 
-            },
-            clearedAt: new Date().toISOString()
-          }
-        ]
-      };
-
-      setLocalExpenses(prev => 
-        prev.map(exp => exp.id === currentExpense.id ? tempExpense : exp)
-      );
-
-      // Make the API call
-      const updatedExpense = await onClearExpense(
-        currentExpense.id,
-        selectedMember,
-        amountToClear
-      );
-
-      // Update with actual response from server
-      setLocalExpenses(prev => 
-        prev.map(exp => exp.id === currentExpense.id ? (updatedExpense || tempExpense) : exp)
-      );
-
-      setClearDialogOpen(false);
-      setClearAmount('');
-      setSelectedMember('');
-      showSnackbar(`Successfully cleared ₹${amountToClear.toFixed(2)}`);
-      
-      // Force refresh data from server
-      await refreshData();
-    } catch (error) {
-      console.error('Clear Expense Error:', error);
-      showSnackbar(error.message, 'error');
-      // Revert optimistic update if error occurs
-      await refreshData();
-    } finally {
-      setIsClearing(false);
-    }
-  };
-
-  const showSnackbar = (message, severity = 'success') => {
-    setSnackbar({ open: true, message, severity });
-  };
-
-  const handleCloseSnackbar = () => {
-    setSnackbar(prev => ({ ...prev, open: false }));
-  };
-
-  if (loading && (!localExpenses || localExpenses.length === 0)) {
+  if (loading && (!expenses || expenses.length === 0)) {
     return (
       <LoadingContainer>
         <CircularProgress />
@@ -424,7 +176,7 @@ const ExpenseList = ({
     );
   }
 
-  if (!localExpenses || localExpenses.length === 0) {
+  if (!expenses || expenses.length === 0) {
     return (
       <Typography variant="body1" align="center" sx={{ p: 2.5 }}>
         No expenses found.
@@ -433,290 +185,89 @@ const ExpenseList = ({
   }
 
   return (
-    <>
-      <StyledTableContainer component={Paper}>
-        <Table aria-label="expenses table">
-          <StyledTableHead>
-            <TableRow>
-              <StyledHeaderCell>Member</StyledHeaderCell>
-              <StyledHeaderCell>Description</StyledHeaderCell>
-              <StyledHeaderCell>Amount</StyledHeaderCell>
-              <StyledHeaderCell>Date</StyledHeaderCell>
-              <StyledHeaderCell>Status</StyledHeaderCell>
-              <StyledHeaderCell>Actions</StyledHeaderCell>
-            </TableRow>
-          </StyledTableHead>
-          <TableBody>
-            {localExpenses.map((expense) => (
-              expense && (
-                <React.Fragment key={expense.id || `expense-${Math.random()}`}>
-                  <StyledTableRow>
-                    <StyledTableCell>
-                      <Box display="flex" alignItems="center">
-                        <MemberAvatar 
-                          alt={expense.member?.name || 'Unknown'} 
-                        >
-                          {(expense.member?.name || 'U').charAt(0)}
-                        </MemberAvatar>
-                        {expense.member?.name || 'Unknown'}
-                      </Box>
-                    </StyledTableCell>
-                    <StyledTableCell>{expense.description || '-'}</StyledTableCell>
-                    <StyledTableCell>{formatAmount(expense.amount)}</StyledTableCell>
-                    <StyledTableCell>{formatDate(expense.date)}</StyledTableCell>
-                    <StyledTableCell>
-                      <Box>
-                        {getStatusChip(expense)}
-                        {renderStatusDetails(expense)}
-                      </Box>
-                    </StyledTableCell>
-                    <ActionCell>
-                      <Box display="flex" alignItems="center">
-                        <ExpandButton
-                          onClick={() => toggleExpand(expense.id)}
-                          disabled={!expense.id}
-                        >
-                          {expandedExpenses[expense.id] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                        </ExpandButton>
-                        <MenuButton
-                          aria-label="actions"
-                          onClick={(e) => handleMenuOpen(e, expense)}
-                        >
-                          <MoreIcon />
-                        </MenuButton>
-                      </Box>
-                    </ActionCell>
-                  </StyledTableRow>
-                  <TableRow>
-                    <TableCell colSpan={6} sx={{ p: 0 }}>
-                      <Collapse in={expandedExpenses[expense.id]} timeout="auto" unmountOnExit>
-                        <Box sx={{ m: 1 }}>
-                          <Typography variant="h6" gutterBottom>
-                            Payment History
-                          </Typography>
-                          <List dense>
-                            {(expense.paymentHistory || []).length > 0 ? (
-                              (expense.paymentHistory || []).map((payment, index) => (
-                                <React.Fragment key={index}>
-                                  <PaymentHistoryItem>
-                                    <PaymentItem>
-                                      <MemberAvatar 
-                                        alt={payment.clearedBy?.name || 'Unknown'}
-                                      >
-                                        {(payment.clearedBy?.name || 'U').charAt(0)}
-                                      </MemberAvatar>
-                                      <ListItemText
-                                        primary={`${formatAmount(payment.amount)} by ${payment.clearedBy?.name || 'Unknown'}`}
-                                        secondary={formatDate(payment.clearedAt)}
-                                      />
-                                    </PaymentItem>
-                                  </PaymentHistoryItem>
-                                  {index < (expense.paymentHistory || []).length - 1 && <Divider />}
-                                </React.Fragment>
-                              ))
-                            ) : (
-                              <ListItem>
-                                <ListItemText primary="No payment history available" />
-                              </ListItem>
-                            )}
-                          </List>
-                        </Box>
-                      </Collapse>
-                    </TableCell>
-                  </TableRow>
-                </React.Fragment>
-              )
-            ))}
-          </TableBody>
-        </Table>
-      </StyledTableContainer>
-
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-        MenuListProps={{
-          'aria-labelledby': 'expense-actions-menu',
-        }}
-      >
-        {isAdmin && [
-          !currentExpense.fullyCleared && (
-            <MenuItem 
-              key="edit"
-              onClick={() => {
-                handleMenuClose();
-                navigate(`/expenses/edit/${currentExpense.id}`);
-              }}
-            >
-              <EditIcon fontSize="small" sx={{ mr: 1 }} />
-              Edit
-            </MenuItem>
-          ),
-          <MenuItem 
-            key="delete"
-            onClick={() => {
-              handleMenuClose();
-              handleDeleteClick();
-            }}
-          >
-            <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
-            Delete
-          </MenuItem>,
-          !currentExpense.fullyCleared && (
-            <MenuItem 
-              key="clear"
-              onClick={() => {
-                handleMenuClose();
-                handleClearClick();
-              }}
-            >
-              <ClearIcon fontSize="small" sx={{ mr: 1 }} />
-              Clear
-            </MenuItem>
-          )
-        ].filter(Boolean)}
-        <MenuItem 
-          key="history"
-          onClick={handleHistoryClick}
-        >
-          <HistoryIcon fontSize="small" sx={{ mr: 1 }} />
-          View Full History
-        </MenuItem>
-      </Menu>
-
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>
-          Are you sure you want to delete "{currentExpense.description || 'this'}" expense?
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)} color="primary">
-            Cancel
-          </Button>
-          <Button onClick={handleDeleteConfirm} color="error">
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog open={clearDialogOpen} onClose={() => setClearDialogOpen(false)}>
-        <DialogTitle>Clear Expense</DialogTitle>
-        <DialogContentBox>
-          <Typography variant="subtitle1">
-            {currentExpense.description || 'Expense'} (Total: {formatAmount(currentExpense.amount)})
-          </Typography>
-          <Typography color="textSecondary">
-            Remaining: {formatAmount(currentExpense.remainingAmount || 
-                          (currentExpense.amount - (currentExpense.clearedAmount || 0)))}
-          </Typography>
-          <TextField
-            label="Amount to Clear"
-            type="number"
-            value={clearAmount}
-            onChange={(e) => setClearAmount(e.target.value)}
-            fullWidth
-            inputProps={{ 
-              max: currentExpense.remainingAmount || 
-                   (currentExpense.amount - (currentExpense.clearedAmount || 0)),
-              step: "0.01",
-              min: "0.01"
-            }}
-          />
-          <FormControl fullWidth>
-            <InputLabel>Cleared By</InputLabel>
-            <Select
-              value={selectedMember}
-              onChange={(e) => setSelectedMember(e.target.value)}
-              required
-            >
-              {members.map(member => (
-                <MenuItem key={member.id} value={member.id}>
-                  {member.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </DialogContentBox>
-        <DialogActions>
-          <Button onClick={() => setClearDialogOpen(false)} color="primary">
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleClearConfirm} 
-            color="primary" 
-            variant="contained"
-            disabled={!clearAmount || !selectedMember || isClearing}
-          >
-            {isClearing ? <CircularProgress size={24} /> : 'Confirm Clear'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog
-        open={historyDialogOpen}
-        onClose={() => setHistoryDialogOpen(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>
-          Payment History for "{currentExpense.description || 'Expense'}" (Total: {formatAmount(currentExpense.amount)})
-        </DialogTitle>
-        <DialogContent dividers>
-          <List>
-            {paymentHistory.length > 0 ? (
-              paymentHistory.map((payment, index) => (
-                <React.Fragment key={index}>
-                  <ListItem>
-                    <PaymentItem>
+    <StyledTableContainer component={Paper}>
+      <Table aria-label="expenses table">
+        <StyledTableHead>
+          <TableRow>
+            <StyledHeaderCell>Member</StyledHeaderCell>
+            <StyledHeaderCell>Description</StyledHeaderCell>
+            <StyledHeaderCell>Amount</StyledHeaderCell>
+            <StyledHeaderCell>Date</StyledHeaderCell>
+            <StyledHeaderCell>Status</StyledHeaderCell>
+          </TableRow>
+        </StyledTableHead>
+        <TableBody>
+          {expenses.map((expense) => (
+            expense && (
+              <React.Fragment key={expense.id || `expense-${Math.random()}`}>
+                <StyledTableRow
+                  hover 
+                  onClick={() => onClickExpense(expense.id)}
+                  sx={{ cursor: 'pointer' }}
+                >
+                  <StyledTableCell>
+                    <Box display="flex" alignItems="center">
                       <MemberAvatar 
-                        alt={payment.clearedBy?.name || 'Unknown'}
+                        alt={expense.member?.name || 'Unknown'} 
                       >
-                        {(payment.clearedBy?.name || 'U').charAt(0)}
+                        {(expense.member?.name || 'U').charAt(0)}
                       </MemberAvatar>
-                      <ListItemText
-                        primary={`${formatAmount(payment.amount)} by ${payment.clearedBy?.name || 'Unknown'}`}
-                        secondary={
-                          <>
-                            {formatDateTime(payment.timestamp || payment.clearedAt)}
-                            {payment.expense?.description && ` • For: ${payment.expense.description}`}
-                          </>
-                        }
-                      />
-                    </PaymentItem>
-                  </ListItem>
-                  {index < paymentHistory.length - 1 && <Divider />}
-                </React.Fragment>
-              ))
-            ) : (
-              <ListItem>
-                <ListItemText primary="No payment history available" />
-              </ListItem>
-            )}
-          </List>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setHistoryDialogOpen(false)} color="primary">
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert 
-          onClose={handleCloseSnackbar} 
-          severity={snackbar.severity}
-          elevation={6}
-          variant="filled"
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-    </>
+                      {expense.member?.name || 'Unknown'}
+                    </Box>
+                  </StyledTableCell>
+                  <StyledTableCell>{expense.description || '-'}</StyledTableCell>
+                  <StyledTableCell>{formatAmount(expense.amount)}</StyledTableCell>
+                  <StyledTableCell>{formatDate(expense.date)}</StyledTableCell>
+                  <StyledTableCell>
+                    <Box>
+                      {getStatusChip(expense)}
+                      {renderStatusDetails(expense)}
+                    </Box>
+                  </StyledTableCell>
+                </StyledTableRow>
+                <TableRow>
+                  <TableCell colSpan={5} sx={{ p: 0 }}>
+                    <Collapse in={expandedExpenses[expense.id]} timeout="auto" unmountOnExit>
+                      <Box sx={{ m: 1 }}>
+                        <Typography variant="h6" gutterBottom>
+                          Payment History
+                        </Typography>
+                        <List dense>
+                          {(expense.paymentHistory || []).length > 0 ? (
+                            (expense.paymentHistory || []).map((payment, index) => (
+                              <React.Fragment key={index}>
+                                <ListItem>
+                                  <PaymentItem>
+                                    <MemberAvatar 
+                                      alt={payment.clearedBy?.name || 'Unknown'}
+                                    >
+                                      {(payment.clearedBy?.name || 'U').charAt(0)}
+                                    </MemberAvatar>
+                                    <ListItemText
+                                      primary={`${formatAmount(payment.amount)} by ${payment.clearedBy?.name || 'Unknown'}`}
+                                      secondary={formatDate(payment.clearedAt)}
+                                    />
+                                  </PaymentItem>
+                                </ListItem>
+                                {index < (expense.paymentHistory || []).length - 1 && <Divider />}
+                              </React.Fragment>
+                            ))
+                          ) : (
+                            <ListItem>
+                              <ListItemText primary="No payment history available" />
+                            </ListItem>
+                          )}
+                        </List>
+                      </Box>
+                    </Collapse>
+                  </TableCell>
+                </TableRow>
+              </React.Fragment>
+            )
+          ))}
+        </TableBody>
+      </Table>
+    </StyledTableContainer>
   );
 };
 

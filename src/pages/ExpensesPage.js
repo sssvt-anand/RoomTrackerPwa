@@ -21,7 +21,7 @@ import {
   Typography
 } from '@mui/material';
 import Alert from '@mui/material/Alert';
-import { getAllExpenses, deleteExpense, clearExpense, createExpense, updateExpense } from '../api/expenses';
+import { getAllExpenses, deleteExpense,  createExpense, updateExpense } from '../api/expenses';
 import { getAllMembers } from '../api/members';
 import { useAuth } from '../context/AuthContext';
 import ExpenseList from '../components/Expenses/ExpenseList';
@@ -35,8 +35,7 @@ const ExpensesPage = () => {
   const [filteredMembers, setFilteredMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [membersLoading, setMembersLoading] = useState(true);
-  const [isClearing, setIsClearing] = useState(false);
-  const [isAdding, setIsAdding] = useState(false);
+   const [isAdding, setIsAdding] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -133,7 +132,10 @@ const ExpensesPage = () => {
   const handleCloseSnackbar = () => {
     setSnackbar(prev => ({ ...prev, open: false }));
   };
-
+  
+  const handleExpenseClick = (expenseId) => {
+    navigate(`/expenses/${expenseId}`);
+  };
   const handleEditClick = (expense) => {
     if (!isAdmin) {
       showSnackbar('Admin privileges required to edit expenses', 'error');
@@ -189,34 +191,7 @@ const ExpensesPage = () => {
     }
   };
 
-  const handleClearExpense = async (expenseId, memberId, amount) => {
-    try {
-      if (!isAdmin) {
-        showSnackbar('Admin privileges required to clear expenses', 'error');
-        return;
-      }
-      
-      if (!token) throw new Error('Authentication token missing');
-      
-      const amountNum = Number(amount);
-      if (isNaN(amountNum) || amountNum <= 0) {
-        throw new Error('Invalid amount');
-      }
   
-      const memberExists = members.some(m => m.id === memberId);
-      if (!memberExists) throw new Error('Invalid member selected');
-  
-      setIsClearing(true);
-      await clearExpense(expenseId, memberId, amountNum.toFixed(2), token);
-      await fetchExpenses();
-      showSnackbar(`Successfully cleared ₹${amountNum.toFixed(2)}`, 'success');
-    } catch (error) {
-      console.error('Clear expense error:', error);
-      showSnackbar(error.response?.data?.message || error.message, 'error');
-    } finally {
-      setIsClearing(false);
-    }
-  };
 
   const handleAddExpense = async () => {
     try {
@@ -286,8 +261,8 @@ const ExpensesPage = () => {
         <ExpenseList 
           expenses={paginatedExpenses} 
           onDelete={isAdmin ? handleDelete : null}
-          onClearExpense={isAdmin ? handleClearExpense : null}
           onEdit={handleEditClick}
+          onClickExpense={handleExpenseClick} 
           loading={loading}
           refreshData={fetchExpenses}
           members={members} 

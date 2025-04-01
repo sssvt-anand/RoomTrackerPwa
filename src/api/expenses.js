@@ -74,26 +74,56 @@ export const getExpenseDetails = async (id, token) => {
 
 // PUT update existing expense
 export const updateExpense = async (id, data, token) => {
- 
+  // Early validation with detailed error
   if (!token) {
-    const error = new Error("Authentication token missing ,Please Login again");
-    error.code = "MISSING_TOKEN";
+    const error = new Error("Authentication token missing. Please login again.");
+    error.code = "AUTH_MISSING_TOKEN";
     throw error;
   }
 
   try {
+    // Verify token format
+    if (typeof token !== 'string' || !token.startsWith('Bearer ')) {
+      token = `Bearer ${token}`;
+    }
+
     const response = await axios.put(`${API_URL}/${id}`, data, {
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: token,
         "Content-Type": "application/json"
-      }
+      },
+      validateStatus: (status) => status < 500 // Don't throw for 4xx errors
     });
+
+    if (response.status === 401) {
+      const error = new Error("Session expired. Please login again.");
+      error.code = "AUTH_EXPIRED";
+      throw error;
+    }
+
+    if (response.status === 403) {
+      const error = new Error("You don't have permission to update this expense.");
+      error.code = "AUTH_FORBIDDEN";
+      throw error;
+    }
+
+    if (response.status !== 200) {
+      const error = new Error(response.data?.message || "Failed to update expense");
+      error.code = "UPDATE_FAILED";
+      throw error;
+    }
+
     return response.data;
   } catch (error) {
     console.error("Update failed:", {
-      status: error.response?.status,
-      data: error.response?.data,
-      config: error.config
+      message: error.message,
+      code: error.code,
+      request: {
+        url: `${API_URL}/${id}`,
+        data,
+        headers: { Authorization: token.substring(0, 10) + '...' }
+      },
+      response: error.response?.data
     });
     throw error;
   }
@@ -109,26 +139,36 @@ export const deleteExpense = async (id) => {
   });
 };
 
-// POST clear expense (partial/full payment)
-export const clearExpense = async (expenseId, memberId, amount) => {
-  return authenticatedRequest(async () => {
-    // Format amount to 2 decimal places as string
+
+export const clearExpense = async (expenseId, memberId, amount, token) => {
+  try {
+    // Format amount to 2 decimal places
     const formattedAmount = parseFloat(amount).toFixed(2);
     
     const response = await axios.put(
       `${API_URL}/clear/${expenseId}`,
-      null, // No request body for PUT with params
+      {}, // Empty body for PUT with params
       {
         params: {
           memberId,
           amount: formattedAmount
         },
-        headers: getAuthHeader().headers
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeader(token).headers
+        }
       }
     );
     
-    return formatExpenseData(response.data);
-  });
+    return response.data;
+  } catch (error) {
+    console.error('Clear expense error:', {
+      request: `${API_URL}/clear/${expenseId}`,
+      params: { memberId, amount },
+      error: error.response?.data || error.message
+    });
+    throw error;
+  }
 };
 
 // GET payment history for an expense

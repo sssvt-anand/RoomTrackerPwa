@@ -61,11 +61,12 @@ const EditExpense = () => {
         const formattedDate = values.date.toISOString().split('T')[0];
         const payload = {
           description: values.description,
-          amount: parseFloat(values.amount).toFixed(2),
+          amount: parseFloat(values.amount),
           memberId: values.memberId,
           date: formattedDate
         };
         
+        // Make sure to pass the token here
         await updateExpense(id, payload, token);
         
         setSuccessMessage('Expense updated successfully!');
