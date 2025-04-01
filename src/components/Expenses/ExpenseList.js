@@ -189,11 +189,11 @@ const ExpenseList = ({
       <Table aria-label="expenses table">
         <StyledTableHead>
           <TableRow>
-            <StyledHeaderCell>Member</StyledHeaderCell>
             <StyledHeaderCell>Description</StyledHeaderCell>
             <StyledHeaderCell>Amount</StyledHeaderCell>
-            <StyledHeaderCell>Date</StyledHeaderCell>
             <StyledHeaderCell>Status</StyledHeaderCell>
+            <StyledHeaderCell>Member</StyledHeaderCell>
+            <StyledHeaderCell>Date</StyledHeaderCell>
           </TableRow>
         </StyledTableHead>
         <TableBody>
@@ -205,6 +205,14 @@ const ExpenseList = ({
                   onClick={() => onClickExpense(expense.id)}
                   sx={{ cursor: 'pointer' }}
                 >
+                  <StyledTableCell>{expense.description || '-'}</StyledTableCell>
+                  <StyledTableCell>{formatAmount(expense.amount)}</StyledTableCell>
+                  <StyledTableCell>
+                    <Box>
+                      {getStatusChip(expense)}
+                      {renderStatusDetails(expense)}
+                    </Box>
+                  </StyledTableCell>
                   <StyledTableCell>
                     <Box display="flex" alignItems="center">
                       <MemberAvatar 
@@ -215,16 +223,9 @@ const ExpenseList = ({
                       {expense.member?.name || 'Unknown'}
                     </Box>
                   </StyledTableCell>
-                  <StyledTableCell>{expense.description || '-'}</StyledTableCell>
-                  <StyledTableCell>{formatAmount(expense.amount)}</StyledTableCell>
                   <StyledTableCell>{formatDate(expense.date)}</StyledTableCell>
-                  <StyledTableCell>
-                    <Box>
-                      {getStatusChip(expense)}
-                      {renderStatusDetails(expense)}
-                    </Box>
-                  </StyledTableCell>
                 </StyledTableRow>
+                {/* Keep the collapse section unchanged */}
                 <TableRow>
                   <TableCell colSpan={5} sx={{ p: 0 }}>
                     <Collapse in={expandedExpenses[expense.id]} timeout="auto" unmountOnExit>

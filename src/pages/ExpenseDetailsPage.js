@@ -231,8 +231,7 @@ const ExpenseDetailsPage = () => {
       let message = error.message;
       if (error.response?.status === 401) {
         message = 'Session expired. Please login again.';
-        logout();
-        navigate('/login');
+        
       }
 
       setSnackbar({
@@ -249,37 +248,42 @@ const ExpenseDetailsPage = () => {
       if (!token) {
         throw new Error('Authentication token missing');
       }
-
+  
       // Validate inputs
       if (!expense?.description?.trim()) {
         throw new Error('Description is required');
       }
-
-      const amount = parseFloat(expense.amount);
-      if (isNaN(amount) || amount <= 0) {
+  
+      const newAmount = parseFloat(expense.amount);
+      if (isNaN(newAmount) || newAmount <= 0) {
         throw new Error('Amount must be positive');
       }
-
+  
       const memberId = expense.memberId || expense.member?.id;
       if (!memberId) {
         throw new Error('Member is required');
       }
-
+  
       if (!expense.date) {
         throw new Error('Date is required');
       }
-
+  
+      // Calculate new remaining amount
+      const currentClearedAmount = parseFloat(expense.clearedAmount) || 0;
+      const newRemainingAmount = Math.max(0, newAmount - currentClearedAmount);
+  
       // Prepare payload
       const payload = {
         description: expense.description.trim(),
-        amount,
+        amount: newAmount,
         memberId,
-        date: new Date(expense.date).toISOString().split('T')[0]
+        date: new Date(expense.date).toISOString().split('T')[0],
+        remainingAmount: newRemainingAmount // Include remaining amount in update
       };
-
+  
       // Make API call
       await updateExpense(id, payload, token);
-
+  
       // Refresh data
       const [expenseData, history] = await Promise.all([
         getExpenseDetails(id, token),
@@ -302,10 +306,8 @@ const ExpenseDetailsPage = () => {
       let message = error.message;
       if (error.response?.status === 401) {
         message = 'Session expired. Please login again.';
-        logout();
-        navigate('/login');
       }
-
+  
       setSnackbar({
         open: true,
         message,
@@ -314,18 +316,20 @@ const ExpenseDetailsPage = () => {
       });
     }
   };
-
+  const isFullyCleared = () => {
+    return expense?.clearedAmount >= expense?.amount;
+  };
   // Status helpers
   const getStatusColor = () => {
-    if (expense?.fullyCleared) return 'success';
-    if (expense?.clearedAmount > 0) return 'warning';
+    if (isFullyCleared()) return 'success'; 
+    if (expense?.clearedAmount > 0) return 'warning'; 
     return 'error';
   };
-
+  
   const getStatusText = () => {
-    if (expense?.fullyCleared) return 'Fully Cleared';
-    if (expense?.clearedAmount > 0) return `Partially Cleared (${formatAmount(expense.clearedAmount)})`;
-    return 'Pending';
+    if (isFullyCleared()) return `Fully Cleared: ${formatAmount(expense.amount)}`;
+    if (expense?.clearedAmount > 0) return `Partially Cleared: ${formatAmount(expense.clearedAmount)}/${formatAmount(expense.amount)}`;
+    return 'Pending Clearance';
   };
 
   // Loading and error states
@@ -392,28 +396,33 @@ const ExpenseDetailsPage = () => {
 
         {/* Amount summary table */}
         <TableContainer component={Paper} sx={{ mb: 3 }}>
-          <Table>
-            <TableBody>
-              <TableRow>
-                <TableCell component="th" scope="row">Total Amount</TableCell>
-                <TableCell align="right">{formatAmount(expense.amount)}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell component="th" scope="row">Cleared Amount</TableCell>
-                <TableCell align="right">{formatAmount(expense.clearedAmount)}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell component="th" scope="row">Remaining Amount</TableCell>
-                <TableCell align="right" sx={{ 
-                  color: expense.remainingAmount > 0 ? 'error.main' : 'success.main',
-                  fontWeight: 'bold'
-                }}>
-                  {formatAmount(expense.remainingAmount)}
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </TableContainer>
+  <Table>
+    <TableBody>
+      <TableRow>
+        <TableCell component="th" scope="row">Total Amount</TableCell>
+        <TableCell align="right">{formatAmount(expense.amount)}</TableCell>
+      </TableRow>
+      <TableRow>
+        <TableCell component="th" scope="row">Cleared Amount</TableCell>
+        <TableCell align="right" sx={{ 
+          color: expense.clearedAmount > 0 ? (expense.fullyCleared ? 'success.main' : 'warning.main') : 'text.secondary',
+          fontWeight: expense.clearedAmount > 0 ? 'bold' : 'normal'
+        }}>
+          {formatAmount(expense.clearedAmount)}
+        </TableCell>
+      </TableRow>
+      <TableRow>
+        <TableCell component="th" scope="row">Remaining Amount</TableCell>
+        <TableCell align="right" sx={{ 
+          color: expense.remainingAmount > 0 ? 'error.main' : 'success.main',
+          fontWeight: 'bold'
+        }}>
+          {formatAmount(expense.remainingAmount)}
+        </TableCell>
+      </TableRow>
+    </TableBody>
+  </Table>
+</TableContainer>
 
         <Divider sx={{ my: 3 }} />
 
