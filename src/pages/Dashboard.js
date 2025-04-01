@@ -224,7 +224,39 @@ const Dashboard = () => {
         </Grid>
       </Grid>
 
-      {/* Recent Expenses */}
+      {/* Member Balances - MOVED TO TOP */}
+      <Divider style={{ margin: '24px 0' }} />
+      <Typography variant="h5" gutterBottom style={{ marginBottom: '16px' }}>
+        Member Balances
+      </Typography>
+      <Paper style={{ marginBottom: '32px', overflowX: 'auto' }}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell><strong>Member</strong></TableCell>
+              <TableCell align="right"><strong>Total</strong></TableCell>
+              <TableCell align="right"><strong>Cleared</strong></TableCell>
+              <TableCell align="right"><strong>Remaining</strong></TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {memberBalances.map((member, index) => (
+              <TableRow key={index}>
+                <TableCell>{member.member}</TableCell>
+                <TableCell align="right">{formatCurrency(member.total)}</TableCell>
+                <TableCell align="right">{formatCurrency(member.cleared)}</TableCell>
+                <TableCell align="right" style={{ 
+                  color: member.remaining > 0 ? '#d32f2f' : '#2e7d32' 
+                }}>
+                  {formatCurrency(member.remaining)}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Paper>
+
+      {/* Recent Expenses - MOVED TO BOTTOM */}
       <Divider style={{ margin: '24px 0' }} />
       <Typography variant="h5" gutterBottom style={{ marginBottom: '16px' }}>
         Recent Expenses
@@ -260,38 +292,6 @@ const Dashboard = () => {
           rowsPerPageOptions={[5, 10]}
           labelRowsPerPage={isMobile ? 'Rows:' : 'Rows per page:'}
         />
-      </Paper>
-
-      {/* Member Balances */}
-      <Divider style={{ margin: '24px 0' }} />
-      <Typography variant="h5" gutterBottom style={{ marginBottom: '16px' }}>
-        Member Balances
-      </Typography>
-      <Paper style={{ marginBottom: '32px', overflowX: 'auto' }}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell><strong>Member</strong></TableCell>
-              <TableCell align="right"><strong>Total</strong></TableCell>
-              <TableCell align="right"><strong>Cleared</strong></TableCell>
-              <TableCell align="right"><strong>Remaining</strong></TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {memberBalances.map((member, index) => (
-              <TableRow key={index}>
-                <TableCell>{member.member}</TableCell>
-                <TableCell align="right">{formatCurrency(member.total)}</TableCell>
-                <TableCell align="right">{formatCurrency(member.cleared)}</TableCell>
-                <TableCell align="right" style={{ 
-                  color: member.remaining > 0 ? '#d32f2f' : '#2e7d32' 
-                }}>
-                  {formatCurrency(member.remaining)}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
       </Paper>
 
       {/* Error Snackbar */}
