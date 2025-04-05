@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { getAuthHeader } from './auth';
 
-const API_URL = 'https://revolutionary-melissa-personalanand-5efe23d1.koyeb.app/api/exports';
+const API_URL = 'http://localhost:8080/api/exports';
 
 const handleResponse = (response) => {
   if (response.status >= 200 && response.status < 300) {

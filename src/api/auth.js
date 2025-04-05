@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
-const API_URL = 'https://revolutionary-melissa-personalanand-5efe23d1.koyeb.app'
+const API_URL = 'http://localhost:8080'
 
 export const login = async (email, password) => {  
   try {

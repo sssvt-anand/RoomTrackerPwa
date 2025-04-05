@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   Container,
   Typography,
-  Grid,
   Paper,
   Table,
   TableHead,
@@ -14,13 +13,13 @@ import {
   Snackbar,
   TablePagination,
   useMediaQuery,
-  useTheme,
-  Card,
-  CardContent
+  Grid,
+  useTheme
 } from '@mui/material';
 import Alert from '@mui/material/Alert';
 import { useAuth } from '../context/AuthContext';
 import { getAllExpenses } from '../api/expenses';
+import { getBudgetStatus } from '../api/budget';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -34,11 +33,11 @@ const Dashboard = () => {
   const [snackbarSeverity, setSnackbarSeverity] = useState('error');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [budget, setBudget] = useState(null);
   
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  // Define showSnackbar function
   const showSnackbar = (message, severity = 'error') => {
     setSnackbarMessage(message);
     setSnackbarSeverity(severity);
@@ -50,29 +49,37 @@ const Dashboard = () => {
     setError(null);
 
     try {
-      // Fetch all expenses
-      const allExpenses = await getAllExpenses();
+      const [expensesResponse, budgetResponse] = await Promise.all([
+        getAllExpenses(),
+        getBudgetStatus()
+      ]);
 
-      // Store in localStorage for offline fallback
-      localStorage.setItem('cachedExpenses', JSON.stringify(allExpenses));
+      localStorage.setItem('cachedExpenses', JSON.stringify(expensesResponse));
+      localStorage.setItem('cachedBudget', JSON.stringify(budgetResponse));
 
-      setAllExpenses(allExpenses);
-      updatePaginatedExpenses(allExpenses, page, rowsPerPage);
-      calculateSummary(allExpenses);
+      setAllExpenses(expensesResponse);
+      setBudget(budgetResponse);
+      updatePaginatedExpenses(expensesResponse, page, rowsPerPage);
+      calculateSummary(expensesResponse);
     } catch (err) {
       console.error("Failed to fetch data:", err);
       setError("Failed to load data. " + (navigator.onLine ? "Server error." : "You are offline."));
-      setSnackbarOpen(true);
-
-      // Fallback to cached data if available
+      
       const cachedExpenses = localStorage.getItem('cachedExpenses');
+      const cachedBudget = localStorage.getItem('cachedBudget');
+      
       if (cachedExpenses) {
         const parsedExpenses = JSON.parse(cachedExpenses);
         setAllExpenses(parsedExpenses);
         updatePaginatedExpenses(parsedExpenses, page, rowsPerPage);
         calculateSummary(parsedExpenses);
-        showSnackbar('Showing cached data. You are offline.', 'warning');
       }
+      
+      if (cachedBudget) {
+        setBudget(JSON.parse(cachedBudget));
+      }
+      
+      showSnackbar('Showing cached data. You are offline.', 'warning');
     } finally {
       setLoading(false);
     }
@@ -85,28 +92,19 @@ const Dashboard = () => {
   };
 
   const calculateSummary = (expenses) => {
-    // Calculate totals
-    const totalAmount = expenses.reduce(
-      (sum, expense) => sum + parseFloat(expense.amount),
-      0
-    );
-    const totalCleared = expenses.reduce(
-      (sum, expense) => sum + parseFloat(expense.clearedAmount || 0),
-      0
-    );
-    const totalRemaining = totalAmount - totalCleared;
+    const totalAmount = expenses.reduce((sum, expense) => sum + parseFloat(expense.amount), 0);
+    const totalCleared = expenses.reduce((sum, expense) => sum + parseFloat(expense.clearedAmount || 0), 0);
 
     setSummary({
       total: totalAmount,
       totalCleared,
-      totalRemaining,
+      totalRemaining: totalAmount - totalCleared,
       count: expenses.length,
     });
 
-    // Calculate member balances
     const balances = {};
     expenses.forEach((expense) => {
-      const memberName = expense.member.name;
+      const memberName = expense.member?.name || 'Unknown';
       if (!balances[memberName]) {
         balances[memberName] = { total: 0, cleared: 0, remaining: 0 };
       }
@@ -115,14 +113,21 @@ const Dashboard = () => {
       balances[memberName].remaining += parseFloat(expense.amount) - parseFloat(expense.clearedAmount || 0);
     });
 
-    const memberBalancesArray = Object.keys(balances).map((member) => ({
+    setMemberBalances(Object.keys(balances).map((member) => ({
       member,
       total: balances[member].total,
       cleared: balances[member].cleared,
       remaining: balances[member].remaining,
-    }));
+    })));
+  };
 
-    setMemberBalances(memberBalancesArray);
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
   };
 
   const [summary, setSummary] = useState({
@@ -139,15 +144,6 @@ const Dashboard = () => {
   useEffect(() => {
     updatePaginatedExpenses(allExpenses, page, rowsPerPage);
   }, [page, rowsPerPage, allExpenses]);
-
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('en-IN', {
@@ -168,63 +164,93 @@ const Dashboard = () => {
 
   return (
     <Container maxWidth="lg" style={{ padding: isMobile ? '16px' : '24px' }}>
-      <Typography variant="h4" gutterBottom style={{ marginBottom: '24px' }}>
-        Dashboard Overview
-      </Typography>
+  <Typography variant="h4" gutterBottom style={{ marginBottom: '24px' }}>
+    Dashboard Overview
+  </Typography>
 
-      {/* Summary Cards */}
-      <Grid container spacing={3} style={{ marginBottom: '24px' }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card style={{ height: '100%' }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom style={{ color: '#555' }}>
-                Total Expenses
-              </Typography>
-              <Typography variant="h4" style={{ fontWeight: 600 }}>
-                {formatCurrency(summary.total)}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card style={{ height: '100%' }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom style={{ color: '#555' }}>
-                Total Cleared
-              </Typography>
-              <Typography variant="h4" style={{ fontWeight: 600, color: '#2e7d32' }}>
-                {formatCurrency(summary.totalCleared)}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card style={{ height: '100%' }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom style={{ color: '#555' }}>
-                Total Remaining
-              </Typography>
-              <Typography variant="h4" style={{ fontWeight: 600, color: '#d32f2f' }}>
-                {formatCurrency(summary.totalRemaining)}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card style={{ height: '100%' }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom style={{ color: '#555' }}>
-                Total Expenses
-              </Typography>
-              <Typography variant="h4" style={{ fontWeight: 600 }}>
-                {summary.count}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
+  {/* Financial Summary Tables */}
+  <Grid container spacing={3} style={{ marginBottom: '24px' }}>
+    {/* First Row - Two tables side by side */}
+    <Grid container item spacing={3} xs={12}>
+      <Grid item xs={12} sm={6}>
+        <Paper elevation={2} style={{ padding: '16px' }}>
+          <Table size="small">
+            <TableBody>
+              <TableRow>
+                <TableCell><strong>Total Expenses</strong></TableCell>
+                <TableCell align="right">
+                  <strong style={{ fontSize: '1.1rem' }}>{formatCurrency(summary.total)}</strong>
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell><strong>Total Cleared</strong></TableCell>
+                <TableCell align="right">
+                  <strong style={{ fontSize: '1.1rem', color: '#2e7d32' }}>
+                    {formatCurrency(summary.totalCleared)}
+                  </strong>
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </Paper>
       </Grid>
+      
+      <Grid item xs={12} sm={6}>
+        <Paper elevation={2} style={{ padding: '16px' }}>
+          <Table size="small">
+            <TableBody>
+              <TableRow>
+                <TableCell><strong>Total Remaining</strong></TableCell>
+                <TableCell align="right">
+                  <strong style={{ fontSize: '1.1rem', color: '#d32f2f' }}>
+                    {formatCurrency(summary.totalRemaining)}
+                  </strong>
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell><strong>Total Expenses</strong></TableCell>
+                <TableCell align="right">
+                  <strong style={{ fontSize: '1.1rem' }}>{summary.count}</strong>
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </Paper>
+      </Grid>
+    </Grid>
 
-      {/* Member Balances - MOVED TO TOP */}
+    {/* Budget Summary - Full width */}
+    <Grid item xs={12}>
+      <Paper elevation={2} style={{ padding: '16px' }}>
+        <Table size="small">
+          <TableBody>
+            <TableRow>
+              <TableCell><strong>Total Budget</strong></TableCell>
+              <TableCell align="right">
+                <strong style={{ fontSize: '1.1rem' }}>
+                  {budget ? formatCurrency(budget.totalBudget) : '--'}
+                </strong>
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell><strong>Remaining Budget</strong></TableCell>
+              <TableCell align="right">
+                <strong style={{ 
+                  fontSize: '1.1rem', 
+                  color: budget?.remainingBudget < 0 ? '#d32f2f' : '#2e7d32'
+                }}>
+                  {budget ? formatCurrency(budget.remainingBudget) : '--'}
+                </strong>
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </Paper>
+    </Grid>
+  </Grid>
+
+
+      {/* Member Balances */}
       <Divider style={{ margin: '24px 0' }} />
       <Typography variant="h5" gutterBottom style={{ marginBottom: '16px' }}>
         Member Balances
@@ -256,7 +282,7 @@ const Dashboard = () => {
         </Table>
       </Paper>
 
-      {/* Recent Expenses - MOVED TO BOTTOM */}
+      {/* Recent Expenses */}
       <Divider style={{ margin: '24px 0' }} />
       <Typography variant="h5" gutterBottom style={{ marginBottom: '16px' }}>
         Recent Expenses
@@ -274,7 +300,7 @@ const Dashboard = () => {
           <TableBody>
             {paginatedExpenses.map((expense, index) => (
               <TableRow key={index}>
-                <TableCell>{expense.member.name}</TableCell>
+                <TableCell>{expense.member?.name || 'Unknown'}</TableCell>
                 <TableCell>{expense.description}</TableCell>
                 <TableCell align="right">{formatCurrency(expense.amount)}</TableCell>
                 <TableCell>{new Date(expense.date).toLocaleDateString()}</TableCell>
