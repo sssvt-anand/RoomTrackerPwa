@@ -208,7 +208,7 @@ const Dashboard = () => {
                 </TableCell>
               </TableRow>
               <TableRow>
-                <TableCell><strong>Total Expenses</strong></TableCell>
+                <TableCell><strong>Total Transactions</strong></TableCell>
                 <TableCell align="right">
                   <strong style={{ fontSize: '1.1rem' }}>{summary.count}</strong>
                 </TableCell>
