@@ -21,10 +21,11 @@ import {
   Typography
 } from '@mui/material';
 import Alert from '@mui/material/Alert';
-import { getAllExpenses, deleteExpense,  createExpense, updateExpense } from '../api/expenses';
+import { getAllExpenses, deleteExpense, createExpense, updateExpense } from '../api/expenses';
 import { getAllMembers } from '../api/members';
 import { useAuth } from '../context/AuthContext';
 import ExpenseList from '../components/Expenses/ExpenseList';
+import { format, parseISO } from 'date-fns';
 
 const ExpensesPage = () => {
   const navigate = useNavigate();
@@ -35,7 +36,7 @@ const ExpensesPage = () => {
   const [filteredMembers, setFilteredMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [membersLoading, setMembersLoading] = useState(true);
-   const [isAdding, setIsAdding] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -78,22 +79,41 @@ const ExpensesPage = () => {
   };
 
   const fetchExpenses = async () => {
-    try {
-      setLoading(true);
-      const expensesData = await getAllExpenses();
-      setAllExpenses(expensesData);
-      updatePaginatedExpenses(expensesData, page, rowsPerPage);
-      
-      localStorage.setItem('cachedExpenses', JSON.stringify(expensesData));
-    } catch (err) {
+  try {
+    setLoading(true);
+    const expensesData = await getAllExpenses();
+    
+    const expensesWithDates = expensesData.map(expense => ({
+      ...expense,
+      // Use createdAt for the main display date if available
+      date: expense.createdAt ? new Date(expense.createdAt) : new Date(expense.date),
+      // Format for display
+      formattedDate: format(
+        expense.createdAt ? new Date(expense.createdAt) : new Date(expense.date),
+        'MMM d, h:mm a' // e.g. "Jun 20, 08:32 PM"
+      ),
+      // Original date for reference
+      originalDate: new Date(expense.date)
+    }));
+    
+    setAllExpenses(expensesWithDates);
+    updatePaginatedExpenses(expensesWithDates, page, rowsPerPage);
+    
+    localStorage.setItem('cachedExpenses', JSON.stringify(expensesWithDates));
+  } catch (err) {
       console.error('Failed to fetch expenses', err);
       showSnackbar('Failed to load expenses. Please try again.', 'error');
       
       const cachedExpenses = localStorage.getItem('cachedExpenses');
       if (cachedExpenses) {
         const parsedExpenses = JSON.parse(cachedExpenses);
-        setAllExpenses(parsedExpenses);
-        updatePaginatedExpenses(parsedExpenses, page, rowsPerPage);
+        // Reconstruct Date objects from cache
+        const cachedWithDates = parsedExpenses.map(expense => ({
+          ...expense,
+          date: new Date(expense.date)
+        }));
+        setAllExpenses(cachedWithDates);
+        updatePaginatedExpenses(cachedWithDates, page, rowsPerPage);
         showSnackbar('Showing cached data. You are offline.', 'warning');
       }
     } finally {
@@ -136,6 +156,7 @@ const ExpensesPage = () => {
   const handleExpenseClick = (expenseId) => {
     navigate(`/expenses/${expenseId}`);
   };
+
   const handleEditClick = (expense) => {
     if (!isAdmin) {
       showSnackbar('Admin privileges required to edit expenses', 'error');
@@ -151,19 +172,18 @@ const ExpensesPage = () => {
   };
 
   const handleUpdateExpense = async () => {
-    try {
-      setIsEditing(true);
-      const amount = parseFloat(currentExpense.amount);
-      if (isNaN(amount)) throw new Error('Invalid amount');
-      
-      const formattedDate = currentExpense.date.toISOString().split('T')[0];
-      
-      await updateExpense(currentExpense.id, {
-        description: currentExpense.description,
-        amount: amount.toFixed(2),
-        memberId: currentExpense.memberId,
-        date: formattedDate
-      }, token);
+  try {
+    setIsEditing(true);
+    const amount = parseFloat(currentExpense.amount);
+    if (isNaN(amount)) throw new Error('Invalid amount');
+    
+    // Send full datetime
+    await updateExpense(currentExpense.id, {
+      description: currentExpense.description,
+      amount: amount.toFixed(2),
+      memberId: currentExpense.memberId,
+      date: currentExpense.date.toISOString() // Full ISO string
+    }, token);
       
       showSnackbar('Expense updated successfully!', 'success');
       setEditDialogOpen(false);
@@ -191,22 +211,19 @@ const ExpensesPage = () => {
     }
   };
 
-  
-
   const handleAddExpense = async () => {
-    try {
-      setIsAdding(true);
-      const amount = parseFloat(newExpense.amount);
-      if (isNaN(amount)) throw new Error('Invalid amount');
-      
-      const formattedDate = newExpense.date.toISOString().split('T')[0];
-      
-      await createExpense({
-        description: newExpense.description,
-        amount: amount.toFixed(2),
-        memberId: newExpense.memberId,
-        date: formattedDate
-      }, token);
+  try {
+    setIsAdding(true);
+    const amount = parseFloat(newExpense.amount);
+    if (isNaN(amount)) throw new Error('Invalid amount');
+    
+    // Send full datetime instead of just date
+    await createExpense({
+      description: newExpense.description,
+      amount: amount.toFixed(2),
+      memberId: newExpense.memberId,
+      date: newExpense.date.toISOString() // Full ISO string
+    }, token);
       
       showSnackbar('Expense added successfully!', 'success');
       setAddDialogOpen(false);
@@ -253,7 +270,7 @@ const ExpensesPage = () => {
           onClick={() => setAddDialogOpen(true)}
           fullWidth={isMobile}
           disabled={membersLoading}
-          sx={{ mb: 1 }}  // Reduced margin bottom to remove extra space
+          sx={{ mb: 1 }}
         >
           Add New Expense
         </Button>

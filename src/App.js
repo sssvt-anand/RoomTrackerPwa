@@ -15,6 +15,7 @@ import ProtectedRoute from './components/UI/ProtectedRoute';
 import EditExpense from './components/Expenses/EditExpense';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import ExpenseDetailsPage from './pages/ExpenseDetailsPage';
+import MemberBudgetPage from './pages/AllMembersBudgetPage ';
 import './App.css';
 
 function App() {
@@ -58,6 +59,14 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
+                <Route
+    path="/membersbudget"
+    element={
+      <ProtectedRoute>
+        <MemberBudgetPage />
+      </ProtectedRoute>
+    }
+  />
                 <Route
                   path="/reports"
                   element={

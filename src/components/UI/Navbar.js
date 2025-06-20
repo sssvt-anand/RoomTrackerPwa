@@ -23,7 +23,8 @@ import {
   Assessment as ReportsIcon,
   ExitToApp as LogoutIcon,
   AccountCircle as LoginIcon,
-  HowToReg as RegisterIcon
+  HowToReg as RegisterIcon,
+  AccountBalanceWallet as AccountBalanceWalletIcon
 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 
@@ -62,8 +63,8 @@ const Navbar = () => {
       display: 'flex', 
       flexDirection: 'column', 
       height: '100%', 
-      backgroundColor: isMobile ? '#ffffff' : '#0d1b2a', // White background for mobile
-      color: isMobile ? '#000000' : '#ffffff', // Black text for mobile
+      backgroundColor: isMobile ? '#ffffff' : '#0d1b2a',
+      color: isMobile ? '#000000' : '#ffffff',
       pt: { xs: '64px', sm: 0 }
     }}>
       {/* Collapse/Expand Button */}
@@ -104,6 +105,13 @@ const Navbar = () => {
               </ListItemIcon>
               {!collapsed && <ListItemText primary="Reports" sx={{ color: isMobile ? '#000000' : 'inherit' }} />}
             </ListItem>
+            {/* Optional Budgets link - you can remove this if not needed */}
+            <ListItem button component={Link} to="/membersbudget" sx={getMenuItemStyle('/members/budget')}>
+              <ListItemIcon sx={{ color: isMobile ? '#000000' : 'inherit', minWidth: collapsed ? '40px' : '56px' }}>
+                <AccountBalanceWalletIcon />
+              </ListItemIcon>
+              {!collapsed && <ListItemText primary="Budgets" sx={{ color: isMobile ? '#000000' : 'inherit' }} />}
+            </ListItem>
             <Divider sx={{ backgroundColor: isMobile ? '#e0e0e0' : '#374151', my: 1 }} />
             <ListItem button onClick={handleLogout} sx={getMenuItemStyle('/logout')}>
               <ListItemIcon sx={{ color: isMobile ? '#000000' : 'inherit', minWidth: collapsed ? '40px' : '56px' }}>
@@ -142,7 +150,7 @@ const Navbar = () => {
             position: 'fixed',
             top: 16,
             left: 16,
-            color: '#000000', // Changed to black
+            color: '#000000',
             zIndex: theme.zIndex.drawer + 2,
           }} 
           onClick={handleDrawerToggle}
@@ -169,8 +177,8 @@ const Navbar = () => {
             display: { xs: 'block', sm: 'none' },
             '& .MuiDrawer-paper': { 
               width: drawerWidth,
-              backgroundColor: '#ffffff', // White background for mobile
-              color: '#000000', // Black text for mobile
+              backgroundColor: '#ffffff',
+              color: '#000000',
               boxSizing: 'border-box',
               zIndex: theme.zIndex.drawer + 1,
             },
@@ -179,7 +187,7 @@ const Navbar = () => {
           {drawerContent(false)}
         </Drawer>
 
-        {/* Desktop Drawer (unchanged) */}
+        {/* Desktop Drawer */}
         <Drawer
           variant="permanent"
           sx={{
