@@ -81,14 +81,17 @@ const ExpenseDetailsPage = () => {
 
   const formatDate = (dateString) => {
     if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch {
+      return '';
+    }
   };
 
   // Data fetching
@@ -390,7 +393,7 @@ const ExpenseDetailsPage = () => {
             Added by: {expense.member?.name || 'Unknown'}
           </Typography>
           <Typography variant="subtitle1" color="textSecondary">
-            Date: {formatDate(expense.date)}
+          Date: {formatDate(expense.date)}
           </Typography>
         </Box>
 
@@ -613,22 +616,22 @@ const ExpenseDetailsPage = () => {
           </FormControl>
 
           <TextField
-            label="Date *"
-            type="date"
-            fullWidth
-            margin="normal"
-            value={expense.date ? new Date(expense.date).toISOString().split('T')[0] : ''}
-            onChange={(e) => {
-              const date = new Date(e.target.value);
-              setExpense({...expense, date: date.toISOString()});
-            }}
-            InputLabelProps={{
-              shrink: true,
-            }}
-            required
-            error={!expense.date}
-            helperText={!expense.date ? "Required" : ""}
-          />
+  label="Date & Time *"
+  type="datetime-local"
+  fullWidth
+  margin="normal"
+  value={expense.date ? new Date(expense.date).toISOString().slice(0, 16) : ''}
+  onChange={(e) => {
+    const date = new Date(e.target.value);
+    setExpense({...expense, date: date.toISOString()});
+  }}
+  InputLabelProps={{
+    shrink: true,
+  }}
+  required
+  error={!expense.date}
+  helperText={!expense.date ? "Required" : ""}
+/>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => {
