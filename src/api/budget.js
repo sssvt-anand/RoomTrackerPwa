@@ -1,5 +1,5 @@
 import axios from 'axios';
-const API_URL = 'http://localhost:8080'
+const API_URL = 'http://sudden-antelope-personalanand-fd678e31.koyeb.app'
 export const getBudgetStatus = async () => {
   try {
     const response = await axios.get(`${API_URL}/api/budget/status`);
