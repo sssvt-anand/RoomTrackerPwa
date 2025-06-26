@@ -393,7 +393,7 @@ const ExpenseDetailsPage = () => {
             Added by: {expense.member?.name || 'Unknown'}
           </Typography>
           <Typography variant="subtitle1" color="textSecondary">
-          Date: {formatDate(expense.date)}
+          Date: {formatDate(expense.createdAt)}
           </Typography>
         </Box>
 
