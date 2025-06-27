@@ -102,7 +102,7 @@ export const updateExpense = async (id, data, token) => {
     }
 
     if (response.status === 403) {
-      const error = new Error("You don't have permission to update this expense.");
+      const error = new Error("You don't have permissions to update ,Cannot modify cleared expenses.");
       error.code = "AUTH_FORBIDDEN";
       throw error;
     }
@@ -132,11 +132,23 @@ export const updateExpense = async (id, data, token) => {
 
 
 // DELETE expense
-export const deleteExpense = async (id) => {
-  return authenticatedRequest(async () => {
-    await axios.delete(`${API_URL}/${id}`, getAuthHeader());
-    return { id };
-  });
+export const deleteExpense = async (id, token) => {
+  try {
+    const response = await axios.delete(`${API_URL}/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    if (error.response?.status === 403) {
+      throw new Error(error.response.data?.message || "Admin privileges required");
+    }
+    if (error.response?.status === 400) {
+      throw new Error(error.response.data?.message || "Cannot delete cleared expenses");
+    }
+    throw error;
+  }
 };
 
 

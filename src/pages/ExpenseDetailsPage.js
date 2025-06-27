@@ -73,6 +73,7 @@ const ExpenseDetailsPage = () => {
     message: '',
     severity: 'success',
   });
+  const [processing, setProcessing] = useState(false);
 
   // Helper functions
   const formatAmount = (amount) => {
@@ -100,12 +101,11 @@ const ExpenseDetailsPage = () => {
       try {
         setLoading(true);
         
-        // Verify token before making requests
         if (!token) {
           throw new Error('Authentication token missing');
         }
 
-        // Decode token to check expiration
+        // Verify token validity
         try {
           const decoded = jwtDecode(token);
           if (decoded.exp * 1000 < Date.now()) {
@@ -132,6 +132,11 @@ const ExpenseDetailsPage = () => {
           ? [...membersData, { id: user.id, name: 'Me' }] 
           : membersData;
         setMembers(updatedMembers);
+        
+        // Set default selected member to current user
+        if (user?.id) {
+          setSelectedMember(user.id);
+        }
         
       } catch (err) {
         console.error('Data fetch error:', err);
@@ -162,6 +167,7 @@ const ExpenseDetailsPage = () => {
   // Expense operations
   const handleDelete = async () => {
     try {
+      setProcessing(true);
       if (!token) {
         throw new Error('Authentication token missing');
       }
@@ -187,12 +193,13 @@ const ExpenseDetailsPage = () => {
       }
     } finally {
       setDeleteDialogOpen(false);
+      setProcessing(false);
     }
   };
 
   const handleClearExpense = async () => {
     try {
-      // Validate inputs and token
+      setProcessing(true);
       if (!token) {
         throw new Error('Authentication token missing');
       }
@@ -234,7 +241,8 @@ const ExpenseDetailsPage = () => {
       let message = error.message;
       if (error.response?.status === 401) {
         message = 'Session expired. Please login again.';
-        
+      } else if (error.response?.status === 403) {
+        message = 'You do not have permission to perform this action';
       }
 
       setSnackbar({
@@ -242,12 +250,14 @@ const ExpenseDetailsPage = () => {
         message,
         severity: 'error'
       });
+    } finally {
+      setProcessing(false);
     }
   };
 
   const handleSaveEdit = async () => {
     try {
-      // Validate token
+      setProcessing(true);
       if (!token) {
         throw new Error('Authentication token missing');
       }
@@ -280,35 +290,35 @@ const ExpenseDetailsPage = () => {
         description: expense.description.trim(),
         amount: newAmount,
         memberId,
-        date: new Date(expense.date).toISOString().split('T')[0],
-        remainingAmount: newRemainingAmount // Include remaining amount in update
+        date: new Date(expense.date).toISOString(),
+        remainingAmount: newRemainingAmount
       };
   
       // Make API call
-      await updateExpense(id, payload, token);
+      const updatedExpense = await updateExpense(id, payload, token);
   
-      // Refresh data
-      const [expenseData, history] = await Promise.all([
-        getExpenseDetails(id, token),
-        getPaymentHistory(id, token)
-      ]);
+      // Update state
+      setExpense(updatedExpense);
+      setOriginalExpense(updatedExpense);
       
-      setExpense(expenseData);
-      setOriginalExpense(expenseData);
+      // Refresh payment history
+      const history = await getPaymentHistory(id, token);
       setPaymentHistory(history || []);
-      setEditDialogOpen(false);
       
       setSnackbar({
         open: true,
         message: 'Expense updated successfully',
         severity: 'success'
       });
+      setEditDialogOpen(false);
     } catch (error) {
       console.error('Update error:', error);
       
       let message = error.message;
       if (error.response?.status === 401) {
         message = 'Session expired. Please login again.';
+      } else if (error.response?.status === 403) {
+        message = 'You do not have permission to perform this action';
       }
   
       setSnackbar({
@@ -317,11 +327,15 @@ const ExpenseDetailsPage = () => {
         severity: 'error',
         autoHideDuration: 10000
       });
+    } finally {
+      setProcessing(false);
     }
   };
+
   const isFullyCleared = () => {
     return expense?.clearedAmount >= expense?.amount;
   };
+
   // Status helpers
   const getStatusColor = () => {
     if (isFullyCleared()) return 'success'; 
@@ -363,7 +377,6 @@ const ExpenseDetailsPage = () => {
     );
   }
 
-  // Main component render
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
       {/* Header and navigation */}
@@ -372,7 +385,7 @@ const ExpenseDetailsPage = () => {
           Back to Expenses
         </Button>
         
-        {isAdmin && (
+        { (
           <IconButton onClick={handleMenuOpen}>
             <MoreVertIcon />
           </IconButton>
@@ -393,39 +406,39 @@ const ExpenseDetailsPage = () => {
             Added by: {expense.member?.name || 'Unknown'}
           </Typography>
           <Typography variant="subtitle1" color="textSecondary">
-          Date: {formatDate(expense.createdAt)}
+            Date: {formatDate(expense.createdAt)}
           </Typography>
         </Box>
 
         {/* Amount summary table */}
         <TableContainer component={Paper} sx={{ mb: 3 }}>
-  <Table>
-    <TableBody>
-      <TableRow>
-        <TableCell component="th" scope="row">Total Amount</TableCell>
-        <TableCell align="right">{formatAmount(expense.amount)}</TableCell>
-      </TableRow>
-      <TableRow>
-        <TableCell component="th" scope="row">Cleared Amount</TableCell>
-        <TableCell align="right" sx={{ 
-          color: expense.clearedAmount > 0 ? (expense.fullyCleared ? 'success.main' : 'warning.main') : 'text.secondary',
-          fontWeight: expense.clearedAmount > 0 ? 'bold' : 'normal'
-        }}>
-          {formatAmount(expense.clearedAmount)}
-        </TableCell>
-      </TableRow>
-      <TableRow>
-        <TableCell component="th" scope="row">Remaining Amount</TableCell>
-        <TableCell align="right" sx={{ 
-          color: expense.remainingAmount > 0 ? 'error.main' : 'success.main',
-          fontWeight: 'bold'
-        }}>
-          {formatAmount(expense.remainingAmount)}
-        </TableCell>
-      </TableRow>
-    </TableBody>
-  </Table>
-</TableContainer>
+          <Table>
+            <TableBody>
+              <TableRow>
+                <TableCell component="th" scope="row">Total Amount</TableCell>
+                <TableCell align="right">{formatAmount(expense.amount)}</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell component="th" scope="row">Cleared Amount</TableCell>
+                <TableCell align="right" sx={{ 
+                  color: expense.clearedAmount > 0 ? (isFullyCleared() ? 'success.main' : 'warning.main') : 'text.secondary',
+                  fontWeight: expense.clearedAmount > 0 ? 'bold' : 'normal'
+                }}>
+                  {formatAmount(expense.clearedAmount)}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell component="th" scope="row">Remaining Amount</TableCell>
+                <TableCell align="right" sx={{ 
+                  color: expense.remainingAmount > 0 ? 'error.main' : 'success.main',
+                  fontWeight: 'bold'
+                }}>
+                  {formatAmount(expense.remainingAmount)}
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TableContainer>
 
         <Divider sx={{ my: 3 }} />
 
@@ -469,12 +482,15 @@ const ExpenseDetailsPage = () => {
         )}
 
         {/* Clear expense button */}
-        {!expense.fullyCleared && isAdmin && (
+        {!isFullyCleared() &&  (
           <Box mt={3} display="flex" justifyContent="flex-end">
             <Button 
               variant="contained" 
               color="primary"
-              onClick={() => setClearDialogOpen(true)}
+              onClick={() => {
+                setClearAmount(expense.remainingAmount.toString());
+                setClearDialogOpen(true);
+              }}
               startIcon={<CheckIcon />}
               disabled={membersLoading}
             >
@@ -512,7 +528,14 @@ const ExpenseDetailsPage = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleDelete} color="error">Delete</Button>
+          <Button 
+            onClick={handleDelete} 
+            color="error"
+            disabled={processing}
+            startIcon={processing ? <CircularProgress size={20} /> : null}
+          >
+            {processing ? 'Deleting...' : 'Delete'}
+          </Button>
         </DialogActions>
       </Dialog>
 
@@ -540,6 +563,14 @@ const ExpenseDetailsPage = () => {
               max: expense.remainingAmount
             }}
             required
+            error={clearAmount && (parseFloat(clearAmount) > expense.remainingAmount || parseFloat(clearAmount) <= 0)}
+            helperText={
+              clearAmount && (parseFloat(clearAmount) > expense.remainingAmount 
+                ? `Cannot exceed remaining ${formatAmount(expense.remainingAmount)}`
+                : parseFloat(clearAmount) <= 0 
+                  ? 'Amount must be positive'
+                  : '')
+            }
           />
           
           <FormControl fullWidth margin="normal" required>
@@ -562,15 +593,26 @@ const ExpenseDetailsPage = () => {
           <Button 
             onClick={handleClearExpense} 
             color="primary"
-            disabled={!clearAmount || !selectedMember || membersLoading}
+            disabled={
+              !clearAmount || 
+              !selectedMember || 
+              membersLoading || 
+              processing ||
+              parseFloat(clearAmount) > expense.remainingAmount ||
+              parseFloat(clearAmount) <= 0
+            }
+            startIcon={processing ? <CircularProgress size={20} /> : null}
           >
-            Confirm
+            {processing ? 'Processing...' : 'Confirm'}
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Edit expense dialog */}
-      <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} fullWidth maxWidth="sm">
+      <Dialog open={editDialogOpen} onClose={() => {
+        setExpense(originalExpense);
+        setEditDialogOpen(false);
+      }} fullWidth maxWidth="sm">
         <DialogTitle>Edit Expense</DialogTitle>
         <DialogContent>
           <TextField
@@ -593,8 +635,11 @@ const ExpenseDetailsPage = () => {
             onChange={(e) => setExpense({...expense, amount: e.target.value})}
             inputProps={{ min: "0.01", step: "0.01" }}
             required
-            error={!expense.amount || isNaN(expense.amount)}
-            helperText={(!expense.amount || isNaN(expense.amount)) ? "Must be a valid number" : ""}
+            error={!expense.amount || isNaN(expense.amount) || expense.amount <= 0}
+            helperText={
+              !expense.amount ? "Required" :
+              isNaN(expense.amount) || expense.amount <= 0 ? "Must be a positive number" : ""
+            }
           />
           
           <FormControl fullWidth margin="normal" required error={!expense.memberId && !expense.member?.id}>
@@ -616,22 +661,22 @@ const ExpenseDetailsPage = () => {
           </FormControl>
 
           <TextField
-  label="Date & Time *"
-  type="datetime-local"
-  fullWidth
-  margin="normal"
-  value={expense.date ? new Date(expense.date).toISOString().slice(0, 16) : ''}
-  onChange={(e) => {
-    const date = new Date(e.target.value);
-    setExpense({...expense, date: date.toISOString()});
-  }}
-  InputLabelProps={{
-    shrink: true,
-  }}
-  required
-  error={!expense.date}
-  helperText={!expense.date ? "Required" : ""}
-/>
+            label="Date & Time *"
+            type="datetime-local"
+            fullWidth
+            margin="normal"
+            value={expense.date ? new Date(expense.date).toISOString().slice(0, 16) : ''}
+            onChange={(e) => {
+              const date = new Date(e.target.value);
+              setExpense({...expense, date: date.toISOString()});
+            }}
+            InputLabelProps={{
+              shrink: true,
+            }}
+            required
+            error={!expense.date}
+            helperText={!expense.date ? "Required" : ""}
+          />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => {
@@ -647,11 +692,14 @@ const ExpenseDetailsPage = () => {
               !expense.description || 
               !expense.amount || 
               isNaN(expense.amount) || 
+              expense.amount <= 0 ||
               (!expense.memberId && !expense.member?.id) || 
-              !expense.date
+              !expense.date ||
+              processing
             }
+            startIcon={processing ? <CircularProgress size={20} /> : null}
           >
-            Save Changes
+            {processing ? 'Saving...' : 'Save Changes'}
           </Button>
         </DialogActions>
       </Dialog>
