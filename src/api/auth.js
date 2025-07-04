@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
-const API_URL = 'http://localhost:8081'
+const API_URL = 'https://sudden-antelope-personalanand-fd678e31.koyeb.app'
 
 export const login = async (email, password) => {  
   try {

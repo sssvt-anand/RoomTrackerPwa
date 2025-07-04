@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { refreshToken, getAuthHeader } from './auth';
 
-const API_URL = 'http://localhost:8081/api/expenses';
+const API_URL = 'https://sudden-antelope-personalanand-fd678e31.koyeb.app/api/expenses';
 
 const authenticatedRequest = async (requestFn) => {
   try {
