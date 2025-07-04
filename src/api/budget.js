@@ -1,5 +1,5 @@
 import axios from 'axios';
-const API_URL = 'https://sudden-antelope-personalanand-fd678e31.koyeb.app'
+const API_URL = 'http://localhost:8081'
 export const getBudgetStatus = async () => {
   try {
     const response = await axios.get(`${API_URL}/api/budget/status`);
@@ -20,5 +20,23 @@ export const getBudgetStatus = async () => {
       remainingBudget: 0,
       error: error.message
     };
+  }
+};
+export const createBudget = async (memberId, budgetData, authToken) => {
+  try {
+    const response = await axios.post(
+      `${API_URL}/api/budget/members/${memberId}`,  // ✅ FIXED URL
+      budgetData,
+      {
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error creating budget:', error);
+    throw error;
   }
 };

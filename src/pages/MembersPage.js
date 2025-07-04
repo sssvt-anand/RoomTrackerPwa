@@ -12,13 +12,10 @@ import {
   ListItemText,
   Chip,
   styled,
-  TextField,
-  Button,
-  Stack,
   Divider
 } from '@mui/material';
-import { Phone, Security, AttachMoney, Edit, Check, Close } from '@mui/icons-material';
-import { getAllMembers, updateMemberBudgetV2 } from '../api/members';
+import { Phone, Security } from '@mui/icons-material';
+import { getAllMembers } from '../api/members';
 
 const RootList = styled(List)(({ theme }) => ({
   width: '100%',
@@ -55,18 +52,9 @@ const MemberAvatar = styled(Avatar)(({ theme }) => ({
   fontSize: '1.5rem',
 }));
 
-const BudgetInfo = styled('div')(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  marginTop: theme.spacing(1),
-  color: theme.palette.text.secondary,
-}));
-
 const MembersPage = () => {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [editingId, setEditingId] = useState(null);
-  const [tempBudget, setTempBudget] = useState('');
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -81,48 +69,6 @@ const MembersPage = () => {
     };
     fetchMembers();
   }, []);
-
-  const handleEditClick = (member) => {
-    setEditingId(member.id);
-    setTempBudget(member.monthlyBudget?.toString() || '');
-  };
-
-  const handleCancelClick = () => {
-    setEditingId(null);
-    setTempBudget('');
-  };
-
-  const handleSaveClick = async (memberId) => {
-    try {
-      if (!tempBudget || isNaN(tempBudget)) {
-        console.error('Please enter a valid budget amount');
-        return;
-      }
-
-      const budgetValue = parseFloat(tempBudget);
-      if (budgetValue < 0) {
-        console.error('Budget cannot be negative');
-        return;
-      }
-
-      setLoading(true);
-      const updatedMember = await updateMemberBudgetV2(memberId, budgetValue)
-      
-      setMembers(members.map(member => 
-        member.id === updatedMember.id ? updatedMember : member
-      ));
-      
-      setEditingId(null);
-    } catch (err) {
-      console.error('Failed to update budget', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleBudgetChange = (e) => {
-    setTempBudget(e.target.value);
-  };
 
   if (loading) {
     return (
@@ -170,52 +116,6 @@ const MembersPage = () => {
                         {member.mobileNumber}
                       </Typography>
                     </PhoneNumber>
-                    <Divider sx={{ my: 1 }} />
-                    {editingId === member.id ? (
-                      <Stack direction="row" spacing={1} alignItems="center">
-                        <TextField
-                          size="small"
-                          type="number"
-                          value={tempBudget}
-                          onChange={handleBudgetChange}
-                          inputProps={{ min: 0, step: "0.01" }}
-                          sx={{ width: 120 }}
-                        />
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          size="small"
-                          startIcon={<Check />}
-                          onClick={() => handleSaveClick(member.id)}
-                        >
-                          Save
-                        </Button>
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          startIcon={<Close />}
-                          onClick={handleCancelClick}
-                        >
-                          Cancel
-                        </Button>
-                      </Stack>
-                    ) : (
-                      <BudgetInfo>
-                        <AttachMoney fontSize="small" sx={{ marginRight: 1 }} />
-                        <Typography variant="body1" component="span">
-                          Monthly Budget: ${member.monthlyBudget || '0.00'}
-                        </Typography>
-                        <Button
-                          variant="text"
-                          size="small"
-                          startIcon={<Edit />}
-                          onClick={() => handleEditClick(member)}
-                          sx={{ ml: 1 }}
-                        >
-                          Edit
-                        </Button>
-                      </BudgetInfo>
-                    )}
                   </>
                 }
               />

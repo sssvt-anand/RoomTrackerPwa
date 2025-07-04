@@ -106,12 +106,7 @@ const Navbar = () => {
               {!collapsed && <ListItemText primary="Reports" sx={{ color: isMobile ? '#000000' : 'inherit' }} />}
             </ListItem>
             {/* Optional Budgets link - you can remove this if not needed */}
-            <ListItem button component={Link} to="/membersbudget" sx={getMenuItemStyle('/members/budget')}>
-              <ListItemIcon sx={{ color: isMobile ? '#000000' : 'inherit', minWidth: collapsed ? '40px' : '56px' }}>
-                <AccountBalanceWalletIcon />
-              </ListItemIcon>
-              {!collapsed && <ListItemText primary="Budgets" sx={{ color: isMobile ? '#000000' : 'inherit' }} />}
-            </ListItem>
+            
             <Divider sx={{ backgroundColor: isMobile ? '#e0e0e0' : '#374151', my: 1 }} />
             <ListItem button onClick={handleLogout} sx={getMenuItemStyle('/logout')}>
               <ListItemIcon sx={{ color: isMobile ? '#000000' : 'inherit', minWidth: collapsed ? '40px' : '56px' }}>
