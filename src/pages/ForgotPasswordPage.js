@@ -13,7 +13,7 @@ import {
   Alert,
   InputAdornment
 } from '@mui/material';
-import { Email as EmailIcon, Lock as LockIcon } from '@mui/icons-material';
+import { Email as EmailIcon } from '@mui/icons-material';
 import { requestPasswordReset, resetPassword } from '../api/auth';
 
 const ForgotPasswordPage = () => {

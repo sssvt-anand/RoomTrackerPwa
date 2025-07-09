@@ -15,6 +15,7 @@ import ProtectedRoute from './components/UI/ProtectedRoute';
 import EditExpense from './components/Expenses/EditExpense';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import ExpenseDetailsPage from './pages/ExpenseDetailsPage';
+import BudgetPage from './pages/BudgetPage';
 
 import './App.css';
 
@@ -77,6 +78,14 @@ function App() {
                   } 
                 />
                 <Route path="/expenses/:id" element={<ExpenseDetailsPage />} />
+                <Route
+  path="/budget"
+  element={
+    <ProtectedRoute>
+      <BudgetPage />
+    </ProtectedRoute>
+  }
+/>
                 
                 {/* Fallback route - can be a 404 page */}
                 <Route path="*" element={<LoginPage />} />

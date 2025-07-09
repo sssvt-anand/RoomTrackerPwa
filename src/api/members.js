@@ -69,3 +69,4 @@ export const getAllMembersWithBudgets = async () => {
   const response = await axios.get('${API_URL}/$api/member-budget/all');
   return response.data;
 };
+
