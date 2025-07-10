@@ -271,7 +271,7 @@ const ReportsPage = () => {
       
       <div className="reports-footer">
         <p className="help-text">
-          <i className="bi bi-info-circle"></i> Need help? Contact support@example.com
+          <i className="bi bi-info-circle"></i> Need help? Contact ganand9603@gmail.com
         </p>
       </div>
     </div>

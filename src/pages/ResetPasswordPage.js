@@ -11,17 +11,17 @@ import {
   CircularProgress,
   Snackbar,
   Alert,
-  InputAdornment  // Added InputAdornment import
+  InputAdornment  
 } from '@mui/material';
 import { Lock as LockIcon } from '@mui/icons-material';
-import { resetPassword, requestPasswordReset } from '../api/auth';  // Added requestPasswordReset import
+import { resetPassword, requestPasswordReset } from '../api/auth';  
 
 const ResetPasswordPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ text: '', severity: 'info' });
-  const [timeLeft, setTimeLeft] = useState(600); // 10 minutes in seconds
+  const [timeLeft, setTimeLeft] = useState(600); 
   const [email, setEmail] = useState('');
 
   useEffect(() => {

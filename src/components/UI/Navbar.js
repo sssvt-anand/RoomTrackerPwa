@@ -99,6 +99,12 @@ const Navbar = () => {
               </ListItemIcon>
               {!collapsed && <ListItemText primary="Members" sx={{ color: isMobile ? '#000000' : 'inherit' }} />}
             </ListItem>
+            <ListItem button component={Link} to="/budget" sx={getMenuItemStyle('/budget')}>
+  <ListItemIcon sx={{ color: isMobile ? '#000000' : 'inherit', minWidth: collapsed ? '40px' : '56px' }}>
+    <AccountBalanceWalletIcon />
+  </ListItemIcon>
+  {!collapsed && <ListItemText primary="Budget" sx={{ color: isMobile ? '#000000' : 'inherit' }} />}
+</ListItem>
             <ListItem button component={Link} to="/reports" sx={getMenuItemStyle('/reports')}>
               <ListItemIcon sx={{ color: isMobile ? '#000000' : 'inherit', minWidth: collapsed ? '40px' : '56px' }}>
                 <ReportsIcon />
@@ -106,12 +112,7 @@ const Navbar = () => {
               {!collapsed && <ListItemText primary="Reports" sx={{ color: isMobile ? '#000000' : 'inherit' }} />}
             </ListItem>
              
-<ListItem button component={Link} to="/budget" sx={getMenuItemStyle('/budget')}>
-  <ListItemIcon sx={{ color: isMobile ? '#000000' : 'inherit', minWidth: collapsed ? '40px' : '56px' }}>
-    <AccountBalanceWalletIcon />
-  </ListItemIcon>
-  {!collapsed && <ListItemText primary="Budget" sx={{ color: isMobile ? '#000000' : 'inherit' }} />}
-</ListItem>
+
             {/* Optional Budgets link - you can remove this if not needed */}
             
             <Divider sx={{ backgroundColor: isMobile ? '#e0e0e0' : '#374151', my: 1 }} />
