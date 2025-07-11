@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
+import { format } from 'date-fns';
 import { 
   Container, 
   Typography, 
@@ -406,7 +407,10 @@ const ExpenseDetailsPage = () => {
             Added by: {expense.member?.name || 'Unknown'}
           </Typography>
           <Typography variant="subtitle1" color="textSecondary">
-            Date: {formatDate(expense.createdAt)}
+             Date: {format(new Date(expense.date), 'MMMM do, yyyy')}
+          </Typography>
+          <Typography variant="subtitle1" color="textSecondary">
+            Created At : {formatDate(expense.createdAt)}
           </Typography>
         </Box>
 
