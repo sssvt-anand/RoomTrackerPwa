@@ -20,15 +20,14 @@ import Alert from '@mui/material/Alert';
 import { useAuth } from '../context/AuthContext';
 import { getAllExpenses } from '../api/expenses';
 import { getBudgetStatus } from '../api/budget';
-import { getAllMembers } from '../api/members';
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  useAuth();
   const [allExpenses, setAllExpenses] = useState([]);
   const [paginatedExpenses, setPaginatedExpenses] = useState([]);
   const [memberBalances, setMemberBalances] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [, setError] = useState(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('error');
@@ -45,6 +44,7 @@ const Dashboard = () => {
     setSnackbarOpen(true);
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const fetchData = async () => {
     setLoading(true);
     setError(null);
@@ -140,7 +140,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   useEffect(() => {
     updatePaginatedExpenses(allExpenses, page, rowsPerPage);
@@ -301,7 +301,7 @@ const Dashboard = () => {
           <TableBody>
             {paginatedExpenses.map((expense, index) => (
               <TableRow key={index}>
-                <TableCell>{expense.memberName || 'Unknown'}</TableCell>
+                <TableCell>{expense.member?.name || 'Unknown'}</TableCell>
                 <TableCell>{expense.description}</TableCell>
                 <TableCell align="right">{formatCurrency(expense.amount)}</TableCell>
                 <TableCell>{new Date(expense.date).toLocaleDateString()}</TableCell>

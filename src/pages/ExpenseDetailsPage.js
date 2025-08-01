@@ -53,7 +53,7 @@ import { useAuth } from '../context/AuthContext';
 const ExpenseDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { token, isAdmin, user, logout } = useAuth();
+  const { token, user, logout } = useAuth();
   
   // State management
   const [expense, setExpense] = useState(null);

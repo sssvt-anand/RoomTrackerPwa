@@ -25,7 +25,7 @@ import { getAllExpenses, deleteExpense, createExpense, updateExpense } from '../
 import { getAllMembers } from '../api/members';
 import { useAuth } from '../context/AuthContext';
 import ExpenseList from '../components/Expenses/ExpenseList';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 
 const ExpensesPage = () => {
   const navigate = useNavigate();
@@ -130,6 +130,7 @@ const ExpensesPage = () => {
   useEffect(() => {
     fetchMembers();
     fetchExpenses();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
