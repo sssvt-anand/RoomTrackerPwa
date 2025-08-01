@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
-const API_URL = 'https://sudden-antelope-personalanand-fd678e31.koyeb.app'
+const API_URL = 'http://localhost:8080'
 
 export const login = async (email, password) => {  
   try {
@@ -12,6 +12,8 @@ export const login = async (email, password) => {
     
     if (response.data.token) {
       localStorage.setItem('token', response.data.token);
+      localStorage.setItem('refreshToken', response.data.refreshToken);
+      // Decode token to get user info  
       const decoded = jwtDecode(response.data.token);
       return {
         email: decoded.sub,  
