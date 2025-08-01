@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { getAuthHeader } from './auth';
 
-const API_URL = 'https://sudden-antelope-personalanand-fd678e31.koyeb.app/api/members';
+const API_URL = 'http://localhost:8080/api/members';
 export const getAllMembers = async () => {
   const response = await axios.get(API_URL, getAuthHeader());
   return response.data;
@@ -66,6 +66,7 @@ export const getMemberBudgetHistory = async (memberId) => {
 };
 
 export const getAllMembersWithBudgets = async () => {
+  // eslint-disable-next-line no-template-curly-in-string
   const response = await axios.get('${API_URL}/$api/member-budget/all');
   return response.data;
 };

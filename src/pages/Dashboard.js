@@ -20,6 +20,7 @@ import Alert from '@mui/material/Alert';
 import { useAuth } from '../context/AuthContext';
 import { getAllExpenses } from '../api/expenses';
 import { getBudgetStatus } from '../api/budget';
+import { getAllMembers } from '../api/members';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -104,7 +105,7 @@ const Dashboard = () => {
 
     const balances = {};
     expenses.forEach((expense) => {
-      const memberName = expense.member?.name || 'Unknown';
+      const memberName = expense.memberName || 'Unknown';
       if (!balances[memberName]) {
         balances[memberName] = { total: 0, cleared: 0, remaining: 0 };
       }
@@ -300,7 +301,7 @@ const Dashboard = () => {
           <TableBody>
             {paginatedExpenses.map((expense, index) => (
               <TableRow key={index}>
-                <TableCell>{expense.member?.name || 'Unknown'}</TableCell>
+                <TableCell>{expense.memberName || 'Unknown'}</TableCell>
                 <TableCell>{expense.description}</TableCell>
                 <TableCell align="right">{formatCurrency(expense.amount)}</TableCell>
                 <TableCell>{new Date(expense.date).toLocaleDateString()}</TableCell>

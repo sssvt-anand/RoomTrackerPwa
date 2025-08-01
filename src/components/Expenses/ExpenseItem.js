@@ -42,7 +42,7 @@ const ExpenseItem = ({ expense, onDelete, isAdmin }) => {
     title: expense?.title || 'Untitled Expense',
     amount: expense?.amount || 0,
     description: expense?.description || '',
-    memberName: expense?.memberName || 'Unassigned',
+    memberName: expense.memberName || 'Unassigned',
     id: expense?.id || null,
     date: expense?.date || new Date().toISOString()
   };

@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { refreshToken, getAuthHeader } from './auth';
 
-const API_URL = 'https://sudden-antelope-personalanand-fd678e31.koyeb.app/api/expenses';
+const API_URL = 'http://localhost:8080/api/expenses';
 
 const authenticatedRequest = async (requestFn) => {
   try {
@@ -31,11 +31,7 @@ const formatExpenseData = (expense) => ({
                  (expense.amount - (expense.clearedAmount || 0))),
   date: expense.date ? new Date(expense.date).toISOString() : null,
   fullyCleared: (expense.clearedAmount || 0) >= expense.amount,
-  paymentHistory: expense.paymentHistory || [{
-    amount: expense.lastClearedAmount,
-    clearedBy: expense.lastClearedBy,
-    date: expense.lastClearedAt
-  }].filter(p => p.amount > 0)
+  
 });
 
 // GET all expenses

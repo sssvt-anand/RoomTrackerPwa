@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   Table,
   TableBody,
@@ -17,11 +17,12 @@ import {
   List,
   ListItem,
   ListItemText,
- 
+  Skeleton
 } from '@mui/material';
-
 import { styled } from '@mui/material/styles';
+import { getPaymentHistory } from '../../api/expenses';
 
+// Styled Components
 const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
   marginTop: theme.spacing(3),
   borderRadius: theme.shape.borderRadius,
@@ -41,6 +42,9 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
   '&:nth-of-type(odd)': {
     backgroundColor: theme.palette.action.hover,
   },
+  '&:hover': {
+    backgroundColor: theme.palette.action.selected,
+  },
 }));
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
@@ -48,9 +52,10 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
 }));
 
 const StatusChip = styled(Chip)(({ theme, status }) => ({
-  backgroundColor: status === 'cleared' ? '#4caf50' : 
-                  status === 'pending' ? '#ff9800' : '#2196f3',
-  color: 'white',
+  backgroundColor: status === 'cleared' ? theme.palette.success.main : 
+                  status === 'pending' ? theme.palette.warning.main : 
+                  theme.palette.info.main,
+  color: theme.palette.common.white,
 }));
 
 const LoadingContainer = styled(Box)(({ theme }) => ({
@@ -64,8 +69,6 @@ const StatusText = styled(Box)(({ theme }) => ({
   lineHeight: 1.3,
 }));
 
-
-
 const MemberAvatar = styled(Avatar)(({ theme }) => ({
   width: theme.spacing(4),
   height: theme.spacing(4),
@@ -77,6 +80,30 @@ const PaymentItem = styled(Box)(({ theme }) => ({
   alignItems: 'center',
 }));
 
+const PaymentHistoryLoader = () => (
+  <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+    <CircularProgress size={24} />
+    <Typography variant="body2" sx={{ ml: 2 }}>
+      Loading payment details...
+    </Typography>
+  </Box>
+);
+
+const LoadingRow = () => (
+  <StyledTableRow>
+    <StyledTableCell><Skeleton variant="text" /></StyledTableCell>
+    <StyledTableCell><Skeleton variant="text" width="60%" /></StyledTableCell>
+    <StyledTableCell><Skeleton variant="text" width="80%" /></StyledTableCell>
+    <StyledTableCell>
+      <Box display="flex" alignItems="center">
+        <Skeleton variant="circular" width={32} height={32} />
+        <Skeleton variant="text" width="60%" sx={{ ml: 2 }} />
+      </Box>
+    </StyledTableCell>
+    <StyledTableCell><Skeleton variant="text" /></StyledTableCell>
+  </StyledTableRow>
+);
+
 const ExpenseList = ({ 
   expenses = [], 
   loading = false,
@@ -84,17 +111,19 @@ const ExpenseList = ({
   onClickExpense = () => {}
 }) => {
   const [expandedExpenses, setExpandedExpenses] = useState({});
+  const [paymentHistories, setPaymentHistories] = useState({});
+  const [loadingHistoryIds, setLoadingHistoryIds] = useState([]);
 
-  const formatAmount = (amount) => {
+  const formatAmount = useCallback((amount) => {
     try {
       const num = typeof amount === 'number' ? amount : parseFloat(amount || 0);
       return isNaN(num) ? '₹0.00' : `₹${num.toFixed(2)}`;
     } catch {
       return '₹0.00';
     }
-  };
+  }, []);
 
-  const formatDate = (dateString) => {
+  const formatDate = useCallback((dateString) => {
     if (!dateString) return '';
     try {
       const date = new Date(dateString);
@@ -107,9 +136,9 @@ const ExpenseList = ({
     } catch {
       return '';
     }
-  };
+  }, []);
 
-  const getStatusChip = (expense) => {
+  const getStatusChip = useCallback((expense) => {
     if (!expense) return null;
     
     if (expense.fullyCleared) {
@@ -119,9 +148,9 @@ const ExpenseList = ({
     } else {
       return <StatusChip label="Pending" size="small" status="pending" />;
     }
-  };
+  }, []);
 
-  const renderStatusDetails = (expense) => {
+  const renderStatusDetails = useCallback((expense) => {
     if (!expense) return null;
     
     const clearedAmount = parseFloat(expense.clearedAmount || 0);
@@ -164,14 +193,35 @@ const ExpenseList = ({
         </Typography>
       );
     }
-  };
+  }, [formatAmount, formatDate]);
 
-  
+  const handleExpand = async (expenseId) => {
+    setExpandedExpenses(prev => ({
+      ...prev,
+      [expenseId]: !prev[expenseId]
+    }));
+
+    if (!expandedExpenses[expenseId] && !paymentHistories[expenseId]) {
+      try {
+        setLoadingHistoryIds(prev => [...prev, expenseId]);
+        const history = await getPaymentHistory(expenseId);
+        setPaymentHistories(prev => ({
+          ...prev,
+          [expenseId]: history
+        }));
+      } catch (error) {
+        console.error('Failed to load payment history:', error);
+      } finally {
+        setLoadingHistoryIds(prev => prev.filter(id => id !== expenseId));
+      }
+    }
+  };
 
   if (loading && (!expenses || expenses.length === 0)) {
     return (
       <LoadingContainer>
         <CircularProgress />
+        <Typography variant="body1" sx={{ ml: 2 }}>Loading expenses...</Typography>
       </LoadingContainer>
     );
   }
@@ -186,7 +236,7 @@ const ExpenseList = ({
 
   return (
     <StyledTableContainer component={Paper}>
-      <Table aria-label="expenses table">
+      <Table aria-label="expenses table" size="medium">
         <StyledTableHead>
           <TableRow>
             <StyledHeaderCell>Description</StyledHeaderCell>
@@ -197,12 +247,17 @@ const ExpenseList = ({
           </TableRow>
         </StyledTableHead>
         <TableBody>
-          {expenses.map((expense) => (
-            expense && (
+          {loading && expenses.length === 0 ? (
+            Array(5).fill().map((_, i) => <LoadingRow key={`skeleton-${i}`} />)
+          ) : (
+            expenses.map((expense) => (
               <React.Fragment key={expense.id || `expense-${Math.random()}`}>
                 <StyledTableRow
-                  hover 
-                  onClick={() => onClickExpense(expense.id)}
+                  hover
+                  onClick={() => {
+                    onClickExpense(expense.id);
+                    handleExpand(expense.id);
+                  }}
                   sx={{ cursor: 'pointer' }}
                 >
                   <StyledTableCell>{expense.description || '-'}</StyledTableCell>
@@ -214,58 +269,60 @@ const ExpenseList = ({
                     </Box>
                   </StyledTableCell>
                   <StyledTableCell>
-                    <Box display="flex" alignItems="center">
-                      <MemberAvatar 
-                        alt={expense.member?.name || 'Unknown'} 
-                      >
-                        {(expense.member?.name || 'U').charAt(0)}
-                      </MemberAvatar>
-                      {expense.member?.name || 'Unknown'}
-                    </Box>
-                  </StyledTableCell>
+  <Box display="flex" alignItems="center">
+    <MemberAvatar alt={expense.memberName || expense.member?.name || 'Unknown'}>
+      {(expense.memberName || expense.member?.name || 'U').charAt(0)}
+    </MemberAvatar>
+    {expense.memberName || expense.member?.name || 'Unknown'}
+  </Box>
+</StyledTableCell>
                   <StyledTableCell>{formatDate(expense.date)}</StyledTableCell>
                 </StyledTableRow>
-                {/* Keep the collapse section unchanged */}
                 <TableRow>
                   <TableCell colSpan={5} sx={{ p: 0 }}>
                     <Collapse in={expandedExpenses[expense.id]} timeout="auto" unmountOnExit>
                       <Box sx={{ m: 1 }}>
                         <Typography variant="h6" gutterBottom>
                           Payment History
-                        </Typography>
-                        <List dense>
-                          {(expense.paymentHistory || []).length > 0 ? (
-                            (expense.paymentHistory || []).map((payment, index) => (
-                              <React.Fragment key={index}>
-                                <ListItem>
-                                  <PaymentItem>
-                                    <MemberAvatar 
-                                      alt={payment.clearedBy?.name || 'Unknown'}
-                                    >
-                                      {(payment.clearedBy?.name || 'U').charAt(0)}
-                                    </MemberAvatar>
-                                    <ListItemText
-                                      primary={`${formatAmount(payment.amount)} by ${payment.clearedBy?.name || 'Unknown'}`}
-                                      secondary={formatDate(payment.clearedAt)}
-                                    />
-                                  </PaymentItem>
-                                </ListItem>
-                                {index < (expense.paymentHistory || []).length - 1 && <Divider />}
-                              </React.Fragment>
-                            ))
-                          ) : (
-                            <ListItem>
-                              <ListItemText primary="No payment history available" />
-                            </ListItem>
+                          {loadingHistoryIds.includes(expense.id) && (
+                            <CircularProgress size={20} sx={{ ml: 2 }} />
                           )}
-                        </List>
+                        </Typography>
+                        {loadingHistoryIds.includes(expense.id) ? (
+                          <PaymentHistoryLoader />
+                        ) : (
+                          <List dense>
+                            {paymentHistories[expense.id]?.length > 0 ? (
+                              paymentHistories[expense.id].map((payment, index) => (
+                                <React.Fragment key={`payment-${index}`}>
+                                  <ListItem>
+                                    <PaymentItem>
+                                      <MemberAvatar alt={payment.clearedBy?.name || 'Unknown'}>
+                                        {(payment.clearedBy?.name || 'U').charAt(0)}
+                                      </MemberAvatar>
+                                      <ListItemText
+                                        primary={`${formatAmount(payment.amount)} by ${payment.clearedBy?.name || 'Unknown'}`}
+                                        secondary={formatDate(payment.clearedAt)}
+                                      />
+                                    </PaymentItem>
+                                  </ListItem>
+                                  {index < paymentHistories[expense.id].length - 1 && <Divider />}
+                                </React.Fragment>
+                              ))
+                            ) : (
+                              <ListItem>
+                                <ListItemText primary="No payment history available" />
+                              </ListItem>
+                            )}
+                          </List>
+                        )}
                       </Box>
                     </Collapse>
                   </TableCell>
                 </TableRow>
               </React.Fragment>
-            )
-          ))}
+            ))
+          )}
         </TableBody>
       </Table>
     </StyledTableContainer>

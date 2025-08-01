@@ -404,7 +404,7 @@ const ExpenseDetailsPage = () => {
 
         <Box mb={3}>
           <Typography variant="subtitle1" color="textSecondary">
-            Added by: {expense.member?.name || 'Unknown'}
+            Added by: {expense.memberName|| 'Unknown'}
           </Typography>
           <Typography variant="subtitle1" color="textSecondary">
              Date: {format(new Date(expense.date), 'MMMM do, yyyy')}
