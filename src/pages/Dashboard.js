@@ -22,12 +22,12 @@ import { getAllExpenses } from '../api/expenses';
 import { getBudgetStatus } from '../api/budget';
 
 const Dashboard = () => {
-  useAuth();
+  const { user } = useAuth();
   const [allExpenses, setAllExpenses] = useState([]);
   const [paginatedExpenses, setPaginatedExpenses] = useState([]);
   const [memberBalances, setMemberBalances] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [, setError] = useState(null);
+  const [error, setError] = useState(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('error');
@@ -44,7 +44,6 @@ const Dashboard = () => {
     setSnackbarOpen(true);
   };
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const fetchData = async () => {
     setLoading(true);
     setError(null);
@@ -105,7 +104,7 @@ const Dashboard = () => {
 
     const balances = {};
     expenses.forEach((expense) => {
-      const memberName = expense.memberName || 'Unknown';
+      const memberName = expense.memberName || expense.member?.name || 'Unknown';
       if (!balances[memberName]) {
         balances[memberName] = { total: 0, cleared: 0, remaining: 0 };
       }
@@ -140,7 +139,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+  }, []);
 
   useEffect(() => {
     updatePaginatedExpenses(allExpenses, page, rowsPerPage);
@@ -301,7 +300,7 @@ const Dashboard = () => {
           <TableBody>
             {paginatedExpenses.map((expense, index) => (
               <TableRow key={index}>
-                <TableCell>{expense.member?.name || 'Unknown'}</TableCell>
+                <TableCell>{expense.memberName || expense.member?.name || 'Unknown'}</TableCell>
                 <TableCell>{expense.description}</TableCell>
                 <TableCell align="right">{formatCurrency(expense.amount)}</TableCell>
                 <TableCell>{new Date(expense.date).toLocaleDateString()}</TableCell>
