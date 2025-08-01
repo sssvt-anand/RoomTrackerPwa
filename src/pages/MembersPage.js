@@ -11,8 +11,7 @@ import {
   ListItemAvatar,
   ListItemText,
   Chip,
-  styled,
-  Divider
+  styled
 } from '@mui/material';
 import { Phone, Security } from '@mui/icons-material';
 import { getAllMembers } from '../api/members';

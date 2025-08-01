@@ -45,7 +45,7 @@ const ForgotPasswordPage = () => {
     setLoading(true);
     setMessage({ text: '', severity: 'info' });
     
-    const { success, data, error } = await requestPasswordReset(email);
+    const { success, error } = await requestPasswordReset(email);
     
     if (success) {
       setEmail(email);
@@ -65,7 +65,7 @@ const ForgotPasswordPage = () => {
     setLoading(true);
     setMessage({ text: '', severity: 'info' });
     
-    const { success, data, error } = await resetPassword(
+    const { success, error } = await resetPassword(
       values.email || email,
       values.otp,
       values.newPassword
